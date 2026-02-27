@@ -1,0 +1,2374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BATTLE CARDS — Arena of Champions</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fire:#ff4400;--fire-glow:#ff7733;--fire-dark:#6b1800;
+  --ice:#00ccff;--ice-glow:#88eeff;--ice-dark:#003d5c;
+  --electric:#ffe600;--electric-glow:#fff488;--electric-dark:#3d3800;
+  --shadow:#ffcc66;--shadow-glow:#fff0aa;--shadow-dark:#3a2200;
+  --cursed:#cc44ff;--cursed-glow:#ee99ff;--cursed-dark:#2e0060;
+  --p1:#4488ff;--p1g:rgba(68,136,255,.4);--p2:#ff4477;--p2g:rgba(255,68,119,.4);
+  --gold:#ffd700;--gold2:#ffaa00;
+  --bg:#04040d;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;cursor:default}
+
+/* ═══════════════════════════════════════════════
+   ANIMATED BACKGROUND SYSTEM
+════════════════════════════════════════════════ */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+.bg-hex-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 60px);
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+}
+.bg-vignette{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 100% 100% at 50% 50%,transparent 40%,rgba(4,4,13,.8) 100%);
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN SYSTEM
+════════════════════════════════════════════════ */
+.screen{display:none;flex-direction:column;align-items:center;min-height:100vh;position:relative;z-index:2;padding:24px 16px 64px}
+.screen.active{display:flex}
+
+/* ═══════════════════════════════════════════════
+   TITLE SCREEN
+════════════════════════════════════════════════ */
+#start-screen{
+  justify-content:center;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 0%,rgba(255,100,20,.12) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 10% 100%,rgba(68,136,255,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 100%,rgba(204,68,255,.07) 0%,transparent 55%);
+}
+
+.title-emblem{
+  font-size:5rem;margin-bottom:8px;
+  filter:drop-shadow(0 0 40px rgba(255,140,40,.7)) drop-shadow(0 0 80px rgba(255,80,20,.4));
+  animation:emblemPulse 2.8s ease-in-out infinite alternate;
+}
+@keyframes emblemPulse{
+  0%{transform:translateY(0) scale(1) rotate(-4deg);filter:drop-shadow(0 0 40px rgba(255,140,40,.7)) drop-shadow(0 0 80px rgba(255,80,20,.4))}
+  100%{transform:translateY(-20px) scale(1.06) rotate(4deg);filter:drop-shadow(0 0 60px rgba(255,180,40,1)) drop-shadow(0 0 100px rgba(255,100,20,.7))}
+}
+
+.game-title{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(3rem,10vw,7rem);
+  letter-spacing:12px;line-height:.95;text-align:center;
+  background:linear-gradient(135deg,#fff5c0 0%,var(--gold) 30%,var(--gold2) 55%,#ff6600 80%,#ff3300 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,160,20,.6));
+  margin-bottom:6px;
+}
+.game-subtitle{
+  font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:400;
+  color:rgba(255,200,80,.3);letter-spacing:8px;text-transform:uppercase;text-align:center;
+  margin-bottom:16px;
+}
+.title-line{
+  width:360px;height:1px;margin:0 auto 40px;
+  background:linear-gradient(90deg,transparent,rgba(255,170,0,.6) 30%,rgba(255,100,0,.8) 50%,rgba(255,170,0,.6) 70%,transparent);
+  position:relative;
+}
+.title-line::before,.title-line::after{
+  content:'◆';position:absolute;top:50%;transform:translateY(-50%);
+  font-size:.45rem;color:var(--gold2);
+}
+.title-line::before{left:30%}.title-line::after{right:30%}
+
+.preview-row{
+  display:flex;gap:12px;margin-bottom:44px;
+  flex-wrap:wrap;justify-content:center;max-width:860px;
+}
+.preview-row .card{animation:titleCardIn .6s cubic-bezier(.23,1.4,.45,1) backwards}
+.preview-row .card:nth-child(1){animation-delay:.03s}
+.preview-row .card:nth-child(2){animation-delay:.08s}
+.preview-row .card:nth-child(3){animation-delay:.13s}
+.preview-row .card:nth-child(4){animation-delay:.18s}
+.preview-row .card:nth-child(5){animation-delay:.23s}
+.preview-row .card:nth-child(6){animation-delay:.28s}
+.preview-row .card:nth-child(7){animation-delay:.33s}
+.preview-row .card:nth-child(8){animation-delay:.38s}
+.preview-row .card:nth-child(9){animation-delay:.43s}
+.preview-row .card:nth-child(10){animation-delay:.48s}
+@keyframes titleCardIn{
+  from{opacity:0;transform:translateY(40px) rotateX(25deg) scale(.85)}
+  to{opacity:1;transform:translateY(0) rotateX(0) scale(1)}
+}
+
+.mode-prompt{
+  font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:5px;
+  color:rgba(255,200,80,.22);text-transform:uppercase;margin-bottom:20px;text-align:center;
+}
+.mode-btns{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════════ */
+.btn{
+  font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:14px 36px;border-radius:4px;border:2px solid;
+  background:transparent;cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease;
+  position:relative;overflow:hidden;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+  opacity:0;transition:opacity .18s;
+}
+.btn:hover::before{opacity:1}
+.btn:hover{transform:translateY(-3px) scale(1.02)}
+.btn:active{transform:translateY(0) scale(.99)}
+.btn-big{font-size:.85rem;padding:17px 52px}
+.btn-gold{border-color:var(--gold2);color:var(--gold2)}
+.btn-gold:hover{box-shadow:0 0 30px rgba(255,170,0,.5),0 8px 24px rgba(0,0,0,.5)}
+.btn-p1{border-color:var(--p1);color:var(--p1)}
+.btn-p1:hover{box-shadow:0 0 28px rgba(68,136,255,.5)}
+.btn-p2{border-color:var(--p2);color:var(--p2)}
+.btn-p2:hover{box-shadow:0 0 28px rgba(255,68,119,.5)}
+
+/* ═══════════════════════════════════════════════
+   CARD COMPONENT — full 3D flip + holographic
+════════════════════════════════════════════════ */
+.card{
+  width:148px;height:218px;border-radius:10px;
+  position:relative;cursor:pointer;flex-shrink:0;
+  perspective:800px;
+  transition:transform .32s cubic-bezier(.23,1.2,.45,1),filter .3s;
+}
+.card:hover:not(.disabled):not(.no-hover){
+  transform:translateY(-14px) scale(1.07) rotate(-1.2deg);
+  filter:brightness(1.15);
+}
+.card.selected{transform:translateY(-22px) scale(1.12) !important;filter:brightness(1.2)}
+.card.selected::after{
+  content:'✓';position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.2rem;background:rgba(0,0,0,.55);
+  border-radius:10px;z-index:30;color:#fff;
+  text-shadow:0 0 24px #fff,0 0 48px currentColor;
+  font-weight:bold;
+}
+.card.disabled{opacity:.28;cursor:default;pointer-events:none;filter:grayscale(.6)}
+
+.card-flip{
+  width:100%;height:100%;
+  transform-style:preserve-3d;
+  transition:transform .7s cubic-bezier(.4,.2,.2,1);
+  border-radius:10px;
+}
+.card.facedown .card-flip{transform:rotateY(180deg)}
+
+.card-front,.card-back{
+  position:absolute;inset:0;border-radius:10px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.card-back{
+  transform:rotateY(180deg);
+  background:linear-gradient(135deg,#0e0b1f,#080818);
+  border:2px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;font-size:3rem;
+}
+/* When facedown, kill the type glow so it can't bleed through the back */
+.card.facedown{
+  box-shadow:0 4px 20px rgba(0,0,0,.8) !important;
+  filter:none !important;
+}
+/* Hide the front face entirely when facedown to stop art/border bleeding through */
+.card.facedown .card-front{
+  visibility:hidden;
+}
+.card-back::before{
+  content:'';position:absolute;inset:6px;
+  border:1px solid rgba(255,255,255,.06);border-radius:7px;
+}
+.card-back::after{
+  content:'⬡';position:absolute;
+  font-size:5rem;color:rgba(255,255,255,.03);top:50%;left:50%;
+  transform:translate(-50%,-50%);
+}
+
+.card-front{
+  display:flex;flex-direction:column;overflow:hidden;border:2px solid;
+}
+/* Chrome sheen */
+.card-front::after{
+  content:'';position:absolute;inset:0;border-radius:8px;
+  background:linear-gradient(135deg,rgba(255,255,255,.0) 20%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.0) 65%);
+  z-index:12;pointer-events:none;
+  transition:opacity .2s;
+}
+.card:hover .card-front::after{opacity:0}
+
+/* Corner accents */
+.card-front::before{
+  content:'';position:absolute;inset:0;z-index:11;pointer-events:none;
+  background:
+    linear-gradient(135deg,currentColor 0%,transparent 12px) top left,
+    linear-gradient(-135deg,currentColor 0%,transparent 12px) top right,
+    linear-gradient(45deg,currentColor 0%,transparent 12px) bottom left,
+    linear-gradient(-45deg,currentColor 0%,transparent 12px) bottom right;
+  background-size:12px 12px;background-repeat:no-repeat;
+  opacity:.35;
+}
+
+/* ── TYPE PALETTES ── */
+.card.fire .card-front{border-color:var(--fire);background:linear-gradient(155deg,#180500,#2a0a00 55%,#180500);box-shadow:0 0 18px var(--fire),0 0 40px rgba(255,68,0,.2),inset 0 0 30px rgba(107,24,0,.5)}
+.card.fire .type-badge{background:var(--fire);color:#fff;box-shadow:0 0 10px var(--fire-glow)}
+.card.fire .card-name{color:var(--fire-glow);text-shadow:0 0 12px var(--fire)}
+.card.fire .art-bg{background:radial-gradient(circle at 50% 65%,#ff5500,#6b1800 52%,#0a0100)}
+.card.fire .stat-bar-fill{background:linear-gradient(90deg,var(--fire-dark),var(--fire),var(--fire-glow))}
+.card.fire .divider{border-color:rgba(255,68,0,.4)}
+.card.fire .art-svg{color:var(--fire-glow)}
+.card.fire.selected{box-shadow:0 0 40px var(--fire),0 0 70px rgba(255,68,0,.5)}
+.card.fire .card-front::before{color:var(--fire)}
+
+.card.ice .card-front{border-color:var(--ice);background:linear-gradient(155deg,#001520,#003040 55%,#001520);box-shadow:0 0 18px var(--ice),0 0 40px rgba(0,204,255,.2),inset 0 0 30px rgba(0,61,92,.5)}
+.card.ice .type-badge{background:var(--ice-dark);border:1px solid var(--ice);color:var(--ice-glow);box-shadow:0 0 10px var(--ice)}
+.card.ice .card-name{color:var(--ice-glow);text-shadow:0 0 12px var(--ice)}
+.card.ice .art-bg{background:radial-gradient(circle at 50% 65%,#00d8ff,#004060 52%,#000810)}
+.card.ice .stat-bar-fill{background:linear-gradient(90deg,var(--ice-dark),var(--ice),var(--ice-glow))}
+.card.ice .divider{border-color:rgba(0,200,255,.4)}
+.card.ice .art-svg{color:var(--ice-glow)}
+.card.ice.selected{box-shadow:0 0 40px var(--ice),0 0 70px rgba(0,200,255,.5)}
+.card.ice .card-front::before{color:var(--ice)}
+
+.card.electric .card-front{border-color:var(--electric);background:linear-gradient(155deg,#100e00,#201c00 55%,#100e00);box-shadow:0 0 18px var(--electric),0 0 40px rgba(255,230,0,.15),inset 0 0 30px rgba(61,56,0,.5)}
+.card.electric .type-badge{background:var(--electric);color:#1a1800;box-shadow:0 0 10px var(--electric-glow)}
+.card.electric .card-name{color:var(--electric-glow);text-shadow:0 0 12px var(--electric)}
+.card.electric .art-bg{background:radial-gradient(circle at 50% 65%,#ffe600,#3d3800 52%,#080700)}
+.card.electric .stat-bar-fill{background:linear-gradient(90deg,var(--electric-dark),var(--electric),var(--electric-glow))}
+.card.electric .divider{border-color:rgba(255,220,0,.4)}
+.card.electric .art-svg{color:var(--electric-glow)}
+.card.electric.selected{box-shadow:0 0 40px var(--electric),0 0 70px rgba(255,220,0,.5)}
+.card.electric .card-front::before{color:var(--electric)}
+
+.card.shadow .card-front{border-color:var(--shadow);background:linear-gradient(155deg,#120b00,#221400 55%,#120b00);box-shadow:0 0 18px rgba(255,200,80,.45),0 0 40px rgba(255,180,60,.16),inset 0 0 30px rgba(58,34,0,.5)}
+.card.shadow .type-badge{background:rgba(48,28,0,.9);border:1px solid var(--shadow);color:var(--shadow-glow);box-shadow:0 0 10px var(--shadow)}
+.card.shadow .card-name{color:var(--shadow-glow);text-shadow:0 0 12px var(--shadow)}
+.card.shadow .art-bg{background:radial-gradient(circle at 50% 65%,#ffcc66,#3a2200 52%,#060300)}
+.card.shadow .stat-bar-fill{background:linear-gradient(90deg,var(--shadow-dark),var(--shadow),var(--shadow-glow))}
+.card.shadow .divider{border-color:rgba(255,200,80,.4)}
+.card.shadow .art-svg{color:var(--shadow-glow)}
+.card.shadow.selected{box-shadow:0 0 40px var(--shadow),0 0 70px rgba(255,200,80,.5)}
+.card.shadow .card-front::before{color:var(--shadow)}
+
+.card.cursed .card-front{border-color:var(--cursed);background:linear-gradient(155deg,#0c0018,#180028 55%,#0c0018);box-shadow:0 0 18px var(--cursed),0 0 40px rgba(200,60,255,.2),inset 0 0 30px rgba(46,0,96,.55)}
+.card.cursed .type-badge{background:var(--cursed-dark);border:1px solid var(--cursed);color:var(--cursed-glow);box-shadow:0 0 10px var(--cursed)}
+.card.cursed .card-name{color:var(--cursed-glow);text-shadow:0 0 12px var(--cursed)}
+.card.cursed .art-bg{background:radial-gradient(circle at 50% 65%,#cc44ff,#2e0060 52%,#050010)}
+.card.cursed .stat-bar-fill{background:linear-gradient(90deg,var(--cursed-dark),var(--cursed),var(--cursed-glow))}
+.card.cursed .divider{border-color:rgba(200,60,255,.4)}
+.card.cursed .art-svg{color:var(--cursed-glow)}
+.card.cursed.selected{box-shadow:0 0 40px var(--cursed),0 0 70px rgba(200,60,255,.5)}
+.card.cursed .card-front::before{color:var(--cursed)}
+
+/* ── CARD INTERNALS ── */
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 8px 4px;flex-shrink:0}
+.card-name{font-family:'Rajdhani',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;line-height:1.1;flex:1}
+.type-badge{font-family:'Orbitron',sans-serif;font-size:.38rem;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;margin-left:4px;margin-top:1px}
+.art-panel{flex:1;position:relative;overflow:hidden;min-height:0}
+.art-bg{position:absolute;inset:0;opacity:.8}
+.art-svg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:6px}
+.art-svg svg{width:100%;height:100%;filter:drop-shadow(0 0 7px currentColor)}
+.art-panel::after{content:'◈';position:absolute;bottom:3px;right:6px;font-size:7px;color:rgba(255,255,255,.14);z-index:3}
+.card-stats{padding:5px 7px 7px;flex-shrink:0}
+.divider{border:none;border-top:1px solid;margin-bottom:5px}
+.stat-row{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.stat-row:last-child{margin-bottom:0}
+.stat-label{font-family:'Orbitron',sans-serif;font-size:.42rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:2px;width:20px;flex-shrink:0}
+.stat-bar{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;position:relative}
+.stat-bar-fill{height:100%;border-radius:2px;position:relative}
+.stat-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:statShimmer 2.5s linear infinite}
+@keyframes statShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+.stat-value{font-family:'Bebas Neue',cursive;font-size:.75rem;color:rgba(255,255,255,.8);width:12px;text-align:right;flex-shrink:0;letter-spacing:1px}
+
+/* ── ABILITY BADGE on card ── */
+.ability-bar{
+  padding:3px 7px 5px;flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;gap:4px;
+}
+.ability-icon{font-size:.7rem;line-height:1;flex-shrink:0}
+.ability-text{flex:1;min-width:0}
+.ability-name{
+  font-family:'Orbitron',sans-serif;font-size:.38rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;line-height:1.2;
+}
+.ability-desc{
+  font-family:'Rajdhani',sans-serif;font-size:.48rem;font-weight:500;
+  color:rgba(255,255,255,.45);line-height:1.2;
+}
+/* per-type ability colours */
+.card.fire  .ability-name{color:#ff7733}
+.card.ice   .ability-name{color:#88eeff}
+.card.electric .ability-name{color:#fff488}
+.card.cursed .ability-name{color:#ee99ff}
+
+/* ── ABILITY TRIGGER OVERLAY (arena) ── */
+.ability-overlay{
+  position:fixed;inset:0;z-index:250;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .25s;
+}
+.ability-overlay.show{opacity:1}
+.ability-overlay.hide{opacity:0;transition:opacity .35s}
+
+.ability-banner{
+  font-family:'Bebas Neue',cursive;font-size:clamp(2rem,7vw,3.8rem);
+  letter-spacing:8px;text-align:center;padding:14px 48px;
+  border-radius:5px;border:2px solid;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(8px);
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+  animation:abilityPop .5s cubic-bezier(.23,1.4,.45,1) both;
+}
+@keyframes abilityPop{from{transform:scale(.5) translateY(-30px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.ability-sub{
+  font-family:'Rajdhani',sans-serif;font-size:1.15rem;font-weight:700;
+  letter-spacing:2px;margin-top:14px;text-align:center;
+  padding:8px 28px;border-radius:4px;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  animation:abilityPop .5s .1s cubic-bezier(.23,1.4,.45,1) both;
+}
+
+/* burn — fire red */
+.ability-overlay.burn .ability-banner{color:#ff5500;border-color:#ff4400;box-shadow:0 0 50px #ff4400,0 0 100px rgba(255,68,0,.4)}
+.ability-overlay.burn .ability-sub{color:#ffffff;border:1px solid rgba(255,100,50,.4)}
+/* freeze — ice blue */
+.ability-overlay.freeze .ability-banner{color:#00eeff;border-color:#00ccff;box-shadow:0 0 50px #00ccff,0 0 100px rgba(0,200,255,.4)}
+.ability-overlay.freeze .ability-sub{color:#ffffff;border:1px solid rgba(0,200,255,.4)}
+/* chain-lightning — yellow */
+.ability-overlay.chain .ability-banner{color:#ffee00;border-color:#ffe600;box-shadow:0 0 50px #ffe600,0 0 100px rgba(255,230,0,.4)}
+.ability-overlay.chain .ability-sub{color:#ffffff;border:1px solid rgba(255,220,0,.4)}
+/* poison — cursed purple */
+.ability-overlay.poison .ability-banner{color:#dd66ff;border-color:#cc44ff;box-shadow:0 0 50px #cc44ff,0 0 100px rgba(200,60,255,.4)}
+.ability-overlay.poison .ability-sub{color:#ffffff;border:1px solid rgba(200,80,255,.4)}
+/* lava-shield — molten orange */
+.ability-overlay.lava-shield .ability-banner{color:#ff8833;border-color:#ff5500;box-shadow:0 0 50px #ff4400,0 0 100px rgba(255,80,0,.4)}
+.ability-overlay.lava-shield .ability-sub{color:#ffcc88;border:1px solid rgba(255,120,40,.4)}
+
+
+
+/* ── WITCH STAFF BANG ── */
+.witch-staff-wrap{
+  display:none;
+  position:absolute;bottom:8%;left:50%;transform:translateX(-50%);
+  width:180px;height:260px;pointer-events:none;z-index:5;
+}
+.ability-overlay.poison .witch-staff-wrap{display:block}
+.witch-staff-svg{width:100%;height:100%;overflow:visible}
+
+/* Staff raise — slow and menacing */
+@keyframes staffRaise{
+  0%  {transform:rotate(0deg);transform-origin:100px 260px}
+  100%{transform:rotate(-62deg);transform-origin:100px 260px}
+}
+/* First slam — fast overshoot then settle */
+@keyframes staffSlam{
+  0%  {transform:rotate(-62deg);transform-origin:100px 260px}
+  55% {transform:rotate(10deg);transform-origin:100px 260px}
+  72% {transform:rotate(-4deg);transform-origin:100px 260px}
+  85% {transform:rotate(2deg);transform-origin:100px 260px}
+  100%{transform:rotate(0deg);transform-origin:100px 260px}
+}
+/* Second raise — quick wind-up */
+@keyframes staffRaise2{
+  0%  {transform:rotate(0deg);transform-origin:100px 260px}
+  100%{transform:rotate(-45deg);transform-origin:100px 260px}
+}
+/* Second slam */
+@keyframes staffSlam2{
+  0%  {transform:rotate(-45deg);transform-origin:100px 260px}
+  55% {transform:rotate(8deg);transform-origin:100px 260px}
+  75% {transform:rotate(-3deg);transform-origin:100px 260px}
+  100%{transform:rotate(0deg);transform-origin:100px 260px}
+}
+.witch-staff-svg.raise {animation:staffRaise  .45s ease-in  forwards}
+.witch-staff-svg.slam  {animation:staffSlam   .4s  cubic-bezier(.23,2,.45,1) forwards}
+.witch-staff-svg.raise2{animation:staffRaise2 .3s  ease-in  forwards}
+.witch-staff-svg.slam2 {animation:staffSlam2  .35s cubic-bezier(.23,2,.45,1) forwards}
+
+/* Orb pulse on slam impact */
+@keyframes orbPulse{0%{r:13}35%{r:20}70%{r:10}100%{r:13}}
+#staff-orb-inner.pulse{animation:orbPulse .35s ease-out forwards}
+
+/* Shockwave rings — slower expand to linger */
+@keyframes ringExpand1{0%{rx:0;ry:0;opacity:.95}100%{rx:90;ry:20;opacity:0}}
+@keyframes ringExpand2{0%{rx:0;ry:0;opacity:.75}100%{rx:125;ry:27;opacity:0}}
+@keyframes ringExpand3{0%{rx:0;ry:0;opacity:.55}100%{rx:160;ry:35;opacity:0}}
+@keyframes flashPop   {0%{rx:0;ry:0;opacity:.9}35%{rx:65;ry:15;opacity:.7}100%{rx:100;ry:22;opacity:0}}
+#ring1.pop {animation:ringExpand1 .75s ease-out forwards}
+#ring2.pop {animation:ringExpand2 .95s .08s ease-out forwards}
+#ring3.pop {animation:ringExpand3 1.1s  .16s ease-out forwards}
+#ring1.pop2{animation:ringExpand1 .6s ease-out forwards}
+#ring2.pop2{animation:ringExpand2 .75s .06s ease-out forwards}
+#ring3.pop2{animation:ringExpand3 .9s  .12s ease-out forwards}
+#impact-flash.pop,#impact-flash.pop2{animation:flashPop .45s ease-out forwards}
+
+/* Floating particles for abilities */
+.ability-particle{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:249;
+  animation:abilityParticle ease-out forwards;
+}
+@keyframes abilityParticle{
+  0%{opacity:1;transform:translate(0,0) scale(1)}
+  100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)}
+}
+
+/* Frozen card tint in hand */
+.card.frozen .card-front{
+  filter:brightness(.6) saturate(.3) hue-rotate(180deg) !important;
+  opacity:.5;
+}
+.card.frozen::after{
+  content:'❄ FROZEN';position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;
+  letter-spacing:2px;color:#88eeff;
+  background:rgba(0,30,60,.7);border-radius:10px;z-index:30;
+  text-shadow:0 0 10px #00ccff;
+}
+
+/* Debuff indicator on stat value */
+.stat-value.debuffed{color:#ff6644;text-shadow:0 0 8px #ff4400}
+.stat-value.debuffed::after{content:'↓';font-size:.5rem;margin-left:1px}
+
+/* ═══════════════════════════════════════════════
+   GAME SCREEN
+════════════════════════════════════════════════ */
+#game-screen{
+  padding:16px 16px 40px;gap:0;
+  background:
+    radial-gradient(ellipse 80% 35% at 50% 0%,rgba(15,10,40,.9) 0%,transparent 65%);
+}
+
+/* Scoreboard */
+.scoreboard{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:12px;width:100%;max-width:580px}
+.score-player{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.score-name{font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.score-name.p1{color:var(--p1);text-shadow:0 0 12px var(--p1)}
+.score-name.p2{color:var(--p2);text-shadow:0 0 12px var(--p2)}
+.score-pips{display:flex;gap:7px}
+.pip{width:13px;height:13px;border-radius:50%;border:2px solid;transition:all .35s;position:relative}
+.pip.p1{border-color:var(--p1)}
+.pip.p1.filled{background:var(--p1);box-shadow:0 0 12px var(--p1),0 0 24px var(--p1g)}
+.pip.p2{border-color:var(--p2)}
+.pip.p2.filled{background:var(--p2);box-shadow:0 0 12px var(--p2),0 0 24px var(--p2g)}
+.pip.filled::after{content:'';position:absolute;inset:2px;border-radius:50%;background:rgba(255,255,255,.4)}
+.score-vs{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:rgba(255,210,100,.3);padding:0 24px;letter-spacing:4px}
+.round-label{font-family:'Orbitron',sans-serif;font-size:.55rem;font-weight:400;color:rgba(255,255,255,.22);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:12px}
+
+/* Arena */
+.arena{display:flex;align-items:center;justify-content:center;gap:28px;margin-bottom:14px;min-height:232px;position:relative;width:100%;max-width:570px}
+.arena-slot{display:flex;flex-direction:column;align-items:center;gap:7px}
+.arena-label{font-family:'Orbitron',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.arena-label.p1{color:var(--p1)}.arena-label.p2{color:var(--p2)}
+.arena-card-wrap{width:148px;height:218px;position:relative;display:flex;align-items:center;justify-content:center}
+.arena-empty{
+  width:148px;height:218px;border-radius:10px;
+  border:2px dashed rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:.5rem;color:rgba(255,255,255,.12);
+  letter-spacing:2px;text-transform:uppercase;text-align:center;padding:8px;
+}
+.vs-center{display:flex;flex-direction:column;align-items:center;gap:4px;user-select:none}
+.vs-badge{font-family:'Bebas Neue',cursive;font-size:2rem;color:rgba(255,200,80,.22);letter-spacing:4px}
+.vs-lightning{font-size:1.4rem;filter:drop-shadow(0 0 8px rgba(255,200,50,.4));animation:lightPulse 2s ease-in-out infinite alternate}
+@keyframes lightPulse{from{opacity:.3;transform:scale(.95)}to{opacity:.7;transform:scale(1.1)}}
+
+/* Battle result flash */
+.battle-result{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:400;pointer-events:none;opacity:0}
+.battle-result-text{
+  font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,9vw,5rem);
+  text-align:center;padding:20px 48px;letter-spacing:6px;
+  border-radius:6px;border:3px solid;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(8px);
+  clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);
+  transform:scale(.5);
+}
+.battle-result.show{animation:resultPop 2.6s ease forwards}
+@keyframes resultPop{0%{opacity:0}8%{opacity:1}72%{opacity:1}100%{opacity:0}}
+.battle-result-text.win-p1{color:var(--p1);border-color:var(--p1);box-shadow:0 0 60px var(--p1),0 0 120px var(--p1g);animation:resultScale 2.6s ease forwards}
+.battle-result-text.win-p2{color:var(--p2);border-color:var(--p2);box-shadow:0 0 60px var(--p2),0 0 120px var(--p2g);animation:resultScale 2.6s ease forwards}
+.battle-result-text.tie{color:var(--gold);border-color:var(--gold);box-shadow:0 0 60px rgba(255,200,0,.6);animation:resultScale 2.6s ease forwards}
+@keyframes resultScale{0%{transform:scale(.4) rotate(-4deg)}12%{transform:scale(1.12) rotate(1deg)}20%{transform:scale(.97)}28%{transform:scale(1) rotate(0)}78%{transform:scale(1)}100%{transform:scale(.9)}}
+
+/* Screen shake */
+@keyframes screenShake{
+  0%,100%{transform:translate(0,0) rotate(0deg)}
+  8%{transform:translate(-8px,-5px) rotate(-.4deg)}
+  17%{transform:translate(8px,6px) rotate(.4deg)}
+  26%{transform:translate(-6px,4px) rotate(-.3deg)}
+  35%{transform:translate(7px,-5px) rotate(.3deg)}
+  44%{transform:translate(-4px,4px) rotate(-.2deg)}
+  53%{transform:translate(5px,-3px) rotate(.2deg)}
+  62%{transform:translate(-2px,2px)}
+  74%{transform:translate(2px,-2px)}
+  86%{transform:translate(-1px,1px)}
+}
+.shake-anim{animation:screenShake .55s ease}
+
+/* Phase instruction */
+.phase-instruction{
+  font-family:'Rajdhani',sans-serif;font-size:.88rem;font-weight:600;
+  color:rgba(255,210,120,.7);letter-spacing:2px;text-transform:uppercase;
+  text-align:center;margin-bottom:12px;min-height:1.3em;transition:opacity .3s;
+}
+.phase-instruction .hl-p1{color:var(--p1);text-shadow:0 0 10px var(--p1)}
+.phase-instruction .hl-p2{color:var(--p2);text-shadow:0 0 10px var(--p2)}
+
+/* Hands */
+.hands-area{display:flex;flex-direction:column;gap:14px;width:100%;max-width:640px}
+.hand-row{display:flex;flex-direction:column;align-items:center;gap:8px}
+.hand-label{font-family:'Orbitron',sans-serif;font-size:.55rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;opacity:.55}
+.hand-label.p1{color:var(--p1)}.hand-label.p2{color:var(--p2)}
+.hand-cards{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.battle-btn-wrap{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.ai-thinking{font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;color:var(--p2);letter-spacing:2px;padding:10px 0;text-align:center;opacity:.8;text-transform:uppercase}
+@keyframes dotBlink{0%,100%{opacity:.15}50%{opacity:1}}
+.dot-anim{animation:dotBlink 1s ease infinite}
+
+/* ═══════════════════════════════════════════════
+   WINNER SCREEN
+════════════════════════════════════════════════ */
+#winner-screen{
+  justify-content:center;gap:0;text-align:center;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 35%,rgba(255,140,20,.12) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 30% at 25% 75%,rgba(68,136,255,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 30% at 75% 75%,rgba(200,60,255,.06) 0%,transparent 55%);
+}
+.winner-trophy{
+  font-size:6rem;margin-bottom:14px;
+  filter:drop-shadow(0 0 40px rgba(255,170,0,.8)) drop-shadow(0 0 80px rgba(255,100,0,.5));
+  animation:trophyIn .7s cubic-bezier(.23,1.4,.45,1),trophyFloat 2.4s ease-in-out .7s infinite alternate;
+}
+@keyframes trophyIn{from{transform:scale(0) rotate(-30deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes trophyFloat{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-16px) rotate(4deg)}}
+.winner-label{
+  font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:400;
+  color:rgba(255,200,80,.3);letter-spacing:8px;text-transform:uppercase;
+  margin-bottom:6px;animation:fadeSlideUp .5s .2s ease backwards;
+}
+.winner-title{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(2.4rem,8vw,4.5rem);letter-spacing:8px;
+  margin-bottom:4px;
+  animation:winnerPop .7s .35s cubic-bezier(.23,1.4,.45,1) backwards;
+}
+.winner-title.p1{color:var(--p1);text-shadow:0 0 40px var(--p1),0 0 80px var(--p1g)}
+.winner-title.p2{color:var(--p2);text-shadow:0 0 40px var(--p2),0 0 80px var(--p2g)}
+@keyframes winnerPop{from{opacity:0;transform:scale(.7) translateY(20px)}to{opacity:1;transform:scale(1)}}
+.winner-sub{
+  font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.82rem;
+  color:rgba(255,210,100,.38);letter-spacing:5px;text-transform:uppercase;
+  margin-bottom:26px;animation:fadeSlideUp .5s .5s ease backwards;
+}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.winner-score-row{
+  display:flex;gap:18px;align-items:center;margin-bottom:40px;
+  animation:fadeSlideUp .5s .65s ease backwards;
+}
+.winner-score-chip{
+  font-family:'Bebas Neue',cursive;font-size:3rem;letter-spacing:3px;
+  padding:8px 32px;border-radius:4px;border:2px solid;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.winner-score-chip.p1{border-color:var(--p1);color:var(--p1);box-shadow:0 0 20px var(--p1g)}
+.winner-score-chip.p2{border-color:var(--p2);color:var(--p2);box-shadow:0 0 20px var(--p2g)}
+.winner-sep{color:rgba(255,255,255,.18);font-family:'Bebas Neue',cursive;font-size:1.2rem}
+.confetti-burst{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.confetti-piece{position:absolute;border-radius:2px;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(-30px) rotate(0deg) scaleY(1);opacity:1}100%{transform:translateY(110vh) rotate(900deg) scaleY(.5);opacity:0}}
+
+/* ═══════════════════════════════════════════════
+   BATTLE ARENA OVERLAY
+════════════════════════════════════════════════ */
+.battle-arena-overlay{
+  position:fixed;inset:0;background:#020208;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s;overflow:hidden;
+}
+.battle-arena-overlay.visible{opacity:1;pointer-events:all}
+
+/* Scan lines effect */
+.battle-arena-overlay::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.15) 4px);
+}
+/* Energy floor */
+.arena-floor{
+  position:absolute;bottom:18%;left:0;right:0;height:3px;z-index:3;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.04) 15%,rgba(255,255,255,.18) 40%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.18) 60%,rgba(255,255,255,.04) 85%,transparent 100%);
+}
+.arena-floor::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:80px;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.03));
+  transform:translateY(-100%);
+}
+/* Ring beneath fighters */
+.arena-ring{
+  position:absolute;bottom:18%;left:50%;transform:translateX(-50%);
+  width:360px;height:40px;border-radius:50%;z-index:2;
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 0 30px rgba(255,255,255,.04);
+}
+
+/* Spotlights */
+.arena-spotlight{position:absolute;bottom:18%;pointer-events:none;z-index:2}
+.arena-spotlight.left{
+  left:8%;width:280px;height:72%;
+  clip-path:polygon(25% 100%,75% 100%,100% 0%,0% 0%);
+  background:linear-gradient(180deg,rgba(68,136,255,.06) 0%,transparent 100%);
+  opacity:0;transition:opacity .7s;
+}
+.arena-spotlight.right{
+  right:8%;width:280px;height:72%;
+  clip-path:polygon(25% 100%,75% 100%,100% 0%,0% 0%);
+  background:linear-gradient(180deg,rgba(255,68,119,.06) 0%,transparent 100%);
+  opacity:0;transition:opacity .7s;
+}
+.battle-arena-overlay.visible .arena-spotlight{opacity:1}
+
+/* VS splash */
+.arena-vs-splash{
+  position:absolute;top:40%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  z-index:25;pointer-events:none;text-align:center;
+  opacity:0;transition:transform .5s cubic-bezier(.23,2,.45,1),opacity .3s;
+}
+.arena-vs-splash.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+.arena-vs-splash.out{transform:translate(-50%,-50%) scale(1.6);opacity:0;transition:transform .4s ease,opacity .35s ease}
+.vs-main{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(5rem,18vw,11rem);letter-spacing:16px;line-height:1;
+  background:linear-gradient(135deg,#fff8d0 0%,var(--gold) 30%,var(--gold2) 55%,#ff6600 80%,#ff2200 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 50px rgba(255,140,20,1)) drop-shadow(0 0 100px rgba(255,80,20,.8));
+}
+.vs-names{
+  display:flex;gap:60px;align-items:center;justify-content:center;margin-top:8px;
+}
+.vs-name{font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:4px;opacity:.7}
+.vs-name.p1{color:var(--p1)}.vs-name.p2{color:var(--p2)}
+
+/* Fighters */
+.arena-fighter{position:absolute;bottom:18%;z-index:10}
+.arena-fighter.p1{transform:translateX(-380px);transition:transform .55s cubic-bezier(.23,1.2,.45,1)}
+.arena-fighter.p2{transform:translateX(380px);transition:transform .55s cubic-bezier(.23,1.2,.45,1)}
+.arena-fighter.p1.enter{transform:translateX(-165px)}
+.arena-fighter.p2.enter{transform:translateX(165px)}
+@keyframes chargeLeft{0%{transform:translateX(-165px)}100%{transform:translateX(-55px) rotate(-7deg)}}
+@keyframes chargeRight{0%{transform:translateX(165px)}100%{transform:translateX(55px) rotate(7deg)}}
+.arena-fighter.p1.charge{animation:chargeLeft .38s ease forwards}
+.arena-fighter.p2.charge{animation:chargeRight .38s ease forwards}
+@keyframes recoilWin1{from{transform:translateX(-55px) rotate(-7deg)}to{transform:translateX(-125px) rotate(0)}}
+@keyframes recoilLose1{from{transform:translateX(-55px) rotate(-7deg)}to{transform:translateX(-170px) rotate(12deg) scale(.88)}}
+@keyframes recoilWin2{from{transform:translateX(55px) rotate(7deg)}to{transform:translateX(125px) rotate(0)}}
+@keyframes recoilLose2{from{transform:translateX(55px) rotate(7deg)}to{transform:translateX(170px) rotate(-12deg) scale(.88)}}
+.arena-fighter.p1.win{animation:recoilWin1 .35s ease forwards}
+.arena-fighter.p1.lose{animation:recoilLose1 .35s ease forwards}
+.arena-fighter.p2.win{animation:recoilWin2 .35s ease forwards}
+.arena-fighter.p2.lose{animation:recoilLose2 .35s ease forwards}
+.arena-fighter.win .card-front{animation:winGlow .45s ease 3}
+.arena-fighter.lose .card-front{opacity:.4;filter:grayscale(.5) brightness(.7);transition:all .4s}
+/* Surge uses JS-driven transitions, not keyframes — see surgeFighter() */
+@keyframes surgeRetreatP1{
+  0%  {transform:translateX(-80px) rotate(-3deg) scale(1.06);opacity:1}
+  100%{transform:translateX(-170px) rotate(12deg) scale(.88);opacity:.4;filter:grayscale(.5) brightness(.7)}
+}
+@keyframes surgeRetreatP2{
+  0%  {transform:translateX(80px) rotate(3deg) scale(1.06);opacity:1}
+  100%{transform:translateX(170px) rotate(-12deg) scale(.88);opacity:.4;filter:grayscale(.5) brightness(.7)}
+}
+.arena-fighter.p1.surge-retreat{animation:surgeRetreatP1 .4s ease forwards}
+.arena-fighter.p2.surge-retreat{animation:surgeRetreatP2 .4s ease forwards}
+@keyframes winGlow{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(2) saturate(1.6)}}
+
+/* Clash burst */
+.clash-burst{
+  position:absolute;top:38%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  pointer-events:none;z-index:20;
+  transition:transform .14s cubic-bezier(.23,2.5,.45,1),opacity .4s;
+}
+.clash-burst.pop{transform:translate(-50%,-50%) scale(1)}
+.clash-burst.fade{transform:translate(-50%,-50%) scale(1.8);opacity:0;transition:transform .4s ease,opacity .4s ease}
+.clash-ray{
+  position:absolute;top:50%;left:50%;height:3px;
+  transform-origin:0 50%;border-radius:2px;opacity:0;
+  transition:opacity .1s;
+}
+.clash-burst.pop .clash-ray{opacity:1}
+.clash-star{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:22px;height:22px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 30px #fff,0 0 60px #ffe066,0 0 100px rgba(255,140,0,.8);
+}
+
+/* Round label & stats */
+.arena-round-lbl{
+  position:absolute;top:6%;z-index:15;
+  font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;
+  color:rgba(255,255,255,.18);letter-spacing:6px;text-transform:uppercase;
+}
+.arena-stats{
+  position:absolute;bottom:5%;z-index:15;
+  display:flex;gap:12px;align-items:center;
+  opacity:0;transition:opacity .4s .1s;
+}
+.arena-stats.show{opacity:1}
+.stat-chip{
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.68rem;
+  padding:4px 14px;border-radius:3px;border:1px solid;
+  letter-spacing:1px;white-space:nowrap;
+  clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);
+}
+.stat-chip.p1{border-color:var(--p1);color:var(--p1)}
+.stat-chip.p2{border-color:var(--p2);color:var(--p2)}
+.stat-chip.vs{border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.22);font-size:.55rem}
+
+/* ── SHOCK ZAP ANIMATION ── */
+.shock-zap{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:22;overflow:visible;
+  opacity:0;
+}
+.shock-zap.fire{opacity:1}
+.shock-zap.fire .zap-bolt{animation:zapDraw .15s ease forwards}
+.shock-zap.fire .zap-glow{animation:zapGlow .5s ease forwards}
+@keyframes zapDraw{
+  0%{stroke-dashoffset:400}
+  100%{stroke-dashoffset:0}
+}
+@keyframes zapGlow{
+  0%{opacity:0} 15%{opacity:1} 70%{opacity:1} 100%{opacity:0}
+}
+
+/* Target card shock flash */
+@keyframes shockFlash{
+  0%,100%{filter:brightness(1)}
+  20%{filter:brightness(3) saturate(0) sepia(1) hue-rotate(30deg)}
+  40%{filter:brightness(1.5) saturate(2) hue-rotate(30deg)}
+  60%{filter:brightness(2.5) saturate(0) sepia(1) hue-rotate(30deg)}
+  80%{filter:brightness(1)}
+}
+@keyframes shockShake{
+  0%,100%{transform:translateX(165px)}
+  15%{transform:translateX(158px) rotate(-3deg)}
+  30%{transform:translateX(172px) rotate(3deg)}
+  45%{transform:translateX(160px) rotate(-2deg)}
+  60%{transform:translateX(170px) rotate(2deg)}
+  75%{transform:translateX(163px) rotate(-1deg)}
+}
+.arena-fighter.p2.shocked{animation:shockShake .5s ease}
+.arena-fighter.p2.shocked .card-front{animation:shockFlash .5s ease}
+/* Mirror for p2 being the shock caster (p1 is target) */
+@keyframes shockShakeP1{
+  0%,100%{transform:translateX(-165px)}
+  15%{transform:translateX(-158px) rotate(3deg)}
+  30%{transform:translateX(-172px) rotate(-3deg)}
+  45%{transform:translateX(-160px) rotate(2deg)}
+  60%{transform:translateX(-170px) rotate(-2deg)}
+  75%{transform:translateX(-163px) rotate(1deg)}
+}
+.arena-fighter.p1.shocked{animation:shockShakeP1 .5s ease}
+.arena-fighter.p1.shocked .card-front{animation:shockFlash .5s ease}
+
+/* DEF debuff popup — fixed to viewport, positioned over target fighter */
+.shock-debuff-pop{
+  position:fixed;
+  font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;
+  color:#ffe600;text-shadow:0 0 14px #ffe600,0 0 28px #ff8800;
+  z-index:260;pointer-events:none;white-space:nowrap;
+  animation:debuffPop .9s cubic-bezier(.23,1.4,.45,1) forwards;
+}
+@keyframes debuffPop{
+  0%{opacity:0;transform:translateX(-50%) translateY(0) scale(.5)}
+  25%{opacity:1;transform:translateX(-50%) translateY(-10px) scale(1.2)}
+  60%{opacity:1;transform:translateX(-50%) translateY(-20px) scale(1)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-40px) scale(.9)}
+}
+
+/* ═══════════════════════════════════════════════
+   HANDOFF OVERLAY
+════════════════════════════════════════════════ */
+.handoff-overlay{
+  position:fixed;inset:0;background:rgba(2,2,10,.97);backdrop-filter:blur(16px);
+  z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.handoff-overlay.visible{opacity:1;pointer-events:all}
+.handoff-icon{font-size:3.2rem;animation:handoffBounce 1.1s ease infinite alternate}
+@keyframes handoffBounce{from{transform:scale(1);opacity:.6}to{transform:scale(1.15);opacity:1}}
+.handoff-title{font-family:'Bebas Neue',cursive;font-size:clamp(1.4rem,5vw,2.4rem);text-align:center;letter-spacing:5px}
+.handoff-title.p1{color:var(--p1);text-shadow:0 0 24px var(--p1)}
+.handoff-title.p2{color:var(--p2);text-shadow:0 0 24px var(--p2)}
+.handoff-sub{font-family:'Orbitron',sans-serif;font-size:.58rem;color:rgba(255,255,255,.28);letter-spacing:4px;text-transform:uppercase;text-align:center}
+.handoff-btn{
+  margin-top:14px;font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:14px 42px;border-radius:4px;border:2px solid;
+  background:transparent;cursor:pointer;transition:all .2s;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.handoff-btn.p1{border-color:var(--p1);color:var(--p1)}
+.handoff-btn.p1:hover{box-shadow:0 0 22px rgba(68,136,255,.5);transform:translateY(-2px)}
+.handoff-btn.p2{border-color:var(--p2);color:var(--p2)}
+.handoff-btn.p2:hover{box-shadow:0 0 22px rgba(255,68,119,.5);transform:translateY(-2px)}
+
+/* ═══════════════════════════════════════════════
+   SPARKS
+════════════════════════════════════════════════ */
+.sparks-overlay{position:fixed;inset:0;pointer-events:none;z-index:180}
+.spark{position:absolute;border-radius:50%;animation:sparkFly ease-out forwards}
+@keyframes sparkFly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-hex-grid"></div>
+<div class="bg-vignette"></div>
+
+<!-- ═══════════ START SCREEN ═══════════ -->
+<div id="start-screen" class="screen active">
+  <div class="title-emblem">⚔️</div>
+  <h1 class="game-title">Battle Cards</h1>
+  <p class="game-subtitle">Arena of Champions</p>
+  <div class="title-line"></div>
+  <div class="preview-row" id="preview-cards"></div>
+  <p class="mode-prompt">Select battle mode</p>
+  <div class="mode-btns">
+    <button class="btn btn-big btn-p1" onclick="startGame(false)">⚔ VS Player</button>
+    <button class="btn btn-big btn-p2" onclick="startGame(true)">🤖 VS AI</button>
+  </div>
+</div>
+
+<!-- ═══════════ GAME SCREEN ═══════════ -->
+<div id="game-screen" class="screen">
+  <div class="scoreboard">
+    <div class="score-player">
+      <div class="score-name p1">Player 1</div>
+      <div class="score-pips">
+        <div class="pip p1" id="pip-p1-0"></div>
+        <div class="pip p1" id="pip-p1-1"></div>
+        <div class="pip p1" id="pip-p1-2"></div>
+      </div>
+    </div>
+    <div class="score-vs">VS</div>
+    <div class="score-player">
+      <div class="score-name p2" id="score-name-p2">Player 2</div>
+      <div class="score-pips">
+        <div class="pip p2" id="pip-p2-0"></div>
+        <div class="pip p2" id="pip-p2-1"></div>
+        <div class="pip p2" id="pip-p2-2"></div>
+      </div>
+    </div>
+  </div>
+  <div class="round-label" id="round-label">Round 1</div>
+  <div class="arena">
+    <div class="arena-slot">
+      <div class="arena-label p1">P1</div>
+      <div class="arena-card-wrap" id="arena-p1"><div class="arena-empty">Pick a card</div></div>
+    </div>
+    <div class="vs-center">
+      <div class="vs-badge">VS</div>
+      <div class="vs-lightning">⚡</div>
+    </div>
+    <div class="arena-slot">
+      <div class="arena-label p2">P2</div>
+      <div class="arena-card-wrap" id="arena-p2"><div class="arena-empty">Pick a card</div></div>
+    </div>
+  </div>
+  <div class="phase-instruction" id="phase-text">Waiting...</div>
+  <div class="hands-area">
+    <div class="hand-row" id="hand-row-p1">
+      <div class="hand-label p1">Player 1 Hand</div>
+      <div class="hand-cards" id="hand-p1"></div>
+    </div>
+    <div class="hand-row" id="hand-row-p2">
+      <div class="hand-label p2" id="hand-label-p2">Player 2 Hand</div>
+      <div class="hand-cards" id="hand-p2"></div>
+      <div class="ai-thinking" id="ai-thinking" style="display:none">🤖 AI Computing<span class="dot-anim">...</span></div>
+    </div>
+  </div>
+  <div class="battle-btn-wrap">
+    <button class="btn btn-gold" id="battle-btn" style="display:none" onclick="doBattle()">⚔ BATTLE ⚔</button>
+    <button class="btn btn-gold" id="next-btn" style="display:none" onclick="nextRound()">Next Round ›</button>
+  </div>
+</div>
+
+<!-- ═══════════ WINNER SCREEN ═══════════ -->
+<div id="winner-screen" class="screen">
+  <div class="winner-trophy">🏆</div>
+  <div class="winner-label">Champion</div>
+  <div class="winner-title" id="winner-title">Player 1 Wins!</div>
+  <div class="winner-sub">Arena of Champions</div>
+  <div class="winner-score-row">
+    <div class="winner-score-chip p1" id="winner-score-p1">0</div>
+    <div class="winner-sep">—</div>
+    <div class="winner-score-chip p2" id="winner-score-p2">0</div>
+  </div>
+  <button class="btn btn-big btn-gold" onclick="restartGame()">⚔ Play Again</button>
+  <div class="confetti-burst" id="confetti"></div>
+</div>
+
+<!-- ═══════════ BATTLE ARENA OVERLAY ═══════════ -->
+<div class="battle-arena-overlay" id="battle-arena-overlay">
+  <div class="arena-round-lbl" id="arena-round-lbl">Round 1</div>
+  <div class="arena-spotlight left"></div>
+  <div class="arena-spotlight right"></div>
+  <div class="arena-floor"></div>
+  <div class="arena-ring"></div>
+  <div class="arena-vs-splash" id="arena-vs-splash">
+    <div class="vs-main">VS</div>
+    <div class="vs-names">
+      <div class="vs-name p1" id="vs-name-p1">PLAYER 1</div>
+      <div class="vs-name p2" id="vs-name-p2">PLAYER 2</div>
+    </div>
+  </div>
+  <div class="arena-fighter p1" id="arena-fighter-p1"></div>
+  <div class="arena-fighter p2" id="arena-fighter-p2"></div>
+  <svg class="shock-zap" id="shock-zap" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <polyline id="zap-bolt" class="zap-bolt"
+      points="38,50 44,42 40,50 46,44 42,52"
+      fill="none" stroke="#ffe600" stroke-width="0.8"
+      stroke-dasharray="400" stroke-dashoffset="400"
+      filter="url(#zapBlur)"/>
+    <polyline id="zap-glow" class="zap-glow"
+      points="38,50 44,42 40,50 46,44 42,52"
+      fill="none" stroke="#ffffff" stroke-width="0.3"
+      opacity="0"/>
+    <defs>
+      <filter id="zapBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="0.4" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+  </svg>
+  <div class="clash-burst" id="clash-burst"></div>
+  <div class="arena-stats" id="arena-stats"></div>
+</div>
+
+<!-- Handoff overlay -->
+<div class="handoff-overlay" id="handoff-overlay">
+  <div class="handoff-icon" id="handoff-icon">🛡️</div>
+  <div class="handoff-title" id="handoff-title">Pass to Player 2</div>
+  <div class="handoff-sub">Don't peek!</div>
+  <button class="handoff-btn" id="handoff-btn" onclick="dismissHandoff()">I'm Ready</button>
+</div>
+
+<!-- Battle result overlay -->
+<div class="battle-result" id="battle-result">
+  <div class="battle-result-text" id="battle-result-text"></div>
+</div>
+
+<!-- Sparks -->
+<div class="sparks-overlay" id="sparks"></div>
+
+<!-- Ability trigger overlay -->
+<div class="ability-overlay" id="ability-overlay">
+  <div class="ability-banner" id="ability-banner"></div>
+  <div class="ability-sub" id="ability-sub"></div>
+  <!-- Witch staff-bang animation (only visible on poison overlay) -->
+  <div class="witch-staff-wrap" id="witch-staff-wrap">
+    <svg class="witch-staff-svg" id="witch-staff-svg" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Staff shaft -->
+      <line id="staff-shaft" x1="100" y1="20" x2="100" y2="260" stroke="#6b22aa" stroke-width="8" stroke-linecap="round"/>
+      <line id="staff-shaft-glow" x1="100" y1="20" x2="100" y2="260" stroke="#cc44ff" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <!-- Staff orb -->
+      <circle cx="100" cy="18" r="22" stroke="#ee99ff" stroke-width="3" fill="rgba(60,0,100,0.9)" id="staff-orb"/>
+      <circle cx="100" cy="18" r="13" fill="#cc44ff" opacity="0.95" id="staff-orb-inner"/>
+      <circle cx="92" cy="10" r="5" fill="#fff" opacity="0.35"/>
+      <!-- Ground shockwave rings (start hidden, animated via CSS) -->
+      <ellipse id="ring1" cx="100" cy="260" rx="0" ry="0" stroke="#cc44ff" stroke-width="2.5" opacity="0"/>
+      <ellipse id="ring2" cx="100" cy="260" rx="0" ry="0" stroke="#ee99ff" stroke-width="1.5" opacity="0"/>
+      <ellipse id="ring3" cx="100" cy="260" rx="0" ry="0" stroke="#9922cc" stroke-width="1" opacity="0"/>
+      <!-- Impact flash -->
+      <ellipse id="impact-flash" cx="100" cy="260" rx="0" ry="0" fill="#cc44ff" opacity="0"/>
+    </svg>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   PARTICLE BACKGROUND
+════════════════════════════════════════════════ */
+(function(){
+  const cvs = document.getElementById('bg-canvas');
+  const ctx = cvs.getContext('2d');
+  let W, H, pts=[], lines=[];
+
+  const COLS = [
+    'rgba(255,68,0,','rgba(0,204,255,',
+    'rgba(255,220,0,','rgba(200,60,255,',
+    'rgba(255,180,60,'
+  ];
+
+  function resize(){W=cvs.width=innerWidth;H=cvs.height=innerHeight}
+  addEventListener('resize',resize);resize();
+
+  function mkPt(){
+    return{
+      x:Math.random()*W, y:Math.random()*H,
+      r:.5+Math.random()*1.6,
+      vx:(Math.random()-.5)*.4, vy:-(0.12+Math.random()*.38),
+      a:.03+Math.random()*.2, da:(Math.random()-.5)*.0012,
+      col:COLS[Math.floor(Math.random()*COLS.length)],
+      phase:Math.random()*Math.PI*2
+    };
+  }
+  for(let i=0;i<140;i++)pts.push(mkPt());
+
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.a+=p.da; p.phase+=.025;
+      if(p.a<.02)p.da=Math.abs(p.da);
+      if(p.a>.25)p.da=-Math.abs(p.da);
+      if(p.y<-8||(p.x<-8||p.x>W+8)){const n=mkPt();if(p.y<-8)n.y=H+8;Object.assign(p,n)}
+      const r=p.r*(1+.25*Math.sin(p.phase));
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+      ctx.fillStyle=p.col+p.a+')'; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ═══════════════════════════════════════════════
+   CARD SVG ART
+════════════════════════════════════════════════ */
+const CARD_ART = {
+  'Fire Dragon':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Horned skull-like dragon head -->
+    <path d="M26 42 Q20 30 28 18 Q36 8 40 10 Q44 8 52 18 Q60 30 54 42 Q50 52 40 54 Q30 52 26 42Z" stroke="#ff5500" stroke-width="2" fill="rgba(80,10,0,0.5)"/>
+    <!-- Hollow eye sockets glowing -->
+    <ellipse cx="33" cy="30" rx="5" ry="6" fill="#ff2200" opacity="0.9"/>
+    <ellipse cx="47" cy="30" rx="5" ry="6" fill="#ff2200" opacity="0.9"/>
+    <ellipse cx="33" cy="31" rx="2.5" ry="3.5" fill="#000"/>
+    <ellipse cx="47" cy="31" rx="2.5" ry="3.5" fill="#000"/>
+    <!-- Jagged fangs -->
+    <path d="M34 44 L32 52 L35 48 L37 54 L39 48 L40 54 L41 48 L43 54 L45 48 L48 52 L46 44" stroke="#ff7733" stroke-width="1.5" fill="rgba(60,0,0,0.7)" stroke-linejoin="round"/>
+    <!-- Skull cracks -->
+    <path d="M40 14 L38 22 M35 16 L33 24" stroke="#ff4400" stroke-width="0.8" opacity="0.6"/>
+    <!-- Massive jagged horns -->
+    <path d="M28 20 L18 4 L24 16 L16 12 L22 22" stroke="#ff5500" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M52 20 L62 4 L56 16 L64 12 L58 22" stroke="#ff5500" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <!-- Bone-spike spine -->
+    <path d="M36 54 L32 64 L36 60 L34 70 L40 63 L46 70 L44 60 L48 64 L44 54" stroke="#ff4400" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    <!-- Torn membranous wings -->
+    <path d="M26 38 Q10 28 4 38 Q10 34 14 42 Q8 44 12 52 Q18 42 26 46" stroke="#cc3300" stroke-width="1.8" fill="rgba(80,0,0,0.3)" stroke-linejoin="round"/>
+    <path d="M54 38 Q70 28 76 38 Q70 34 66 42 Q72 44 68 52 Q62 42 54 46" stroke="#cc3300" stroke-width="1.8" fill="rgba(80,0,0,0.3)" stroke-linejoin="round"/>
+    <!-- Wing tears -->
+    <line x1="12" y1="36" x2="10" y2="44" stroke="#ff2200" stroke-width="0.8" opacity="0.5"/>
+    <line x1="68" y1="36" x2="70" y2="44" stroke="#ff2200" stroke-width="0.8" opacity="0.5"/>
+  </svg>`,
+  'Ice Golem':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Hulking cracked torso -->
+    <path d="M22 38 L18 68 L40 72 L62 68 L58 38 Z" stroke="#00ccff" stroke-width="2" fill="rgba(0,30,50,0.6)"/>
+    <!-- Crack lines across body -->
+    <path d="M30 42 L26 56 M38 40 L36 60 M50 44 L48 62" stroke="#88eeff" stroke-width="0.8" opacity="0.4"/>
+    <!-- Shattered head with visor-crack -->
+    <path d="M26 18 L26 38 L54 38 L54 18 Q40 10 26 18Z" stroke="#00ccff" stroke-width="2" fill="rgba(0,20,40,0.7)"/>
+    <!-- Glowing hollow eye cracks — ominous X slashes -->
+    <line x1="30" y1="24" x2="38" y2="32" stroke="#00ffff" stroke-width="2.2"/>
+    <line x1="38" y1="24" x2="30" y2="32" stroke="#00ffff" stroke-width="2.2"/>
+    <line x1="42" y1="24" x2="50" y2="32" stroke="#00ffff" stroke-width="2.2"/>
+    <line x1="50" y1="24" x2="42" y2="32" stroke="#00ffff" stroke-width="2.2"/>
+    <!-- Ice spike crown -->
+    <polygon points="27,18 24,4 30,14" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,40,70,0.8)"/>
+    <polygon points="36,16 35,2 40,12" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,40,70,0.8)"/>
+    <polygon points="44,16 45,2 40,12" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,40,70,0.8)"/>
+    <polygon points="53,18 56,4 50,14" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,40,70,0.8)"/>
+    <!-- Massive claw fists -->
+    <path d="M18 42 L6 38 L4 44 L10 46 L4 50 L8 56 L16 50 L18 56" stroke="#00ccff" stroke-width="2" fill="rgba(0,20,40,0.5)" stroke-linejoin="round"/>
+    <path d="M62 42 L74 38 L76 44 L70 46 L76 50 L72 56 L64 50 L62 56" stroke="#00ccff" stroke-width="2" fill="rgba(0,20,40,0.5)" stroke-linejoin="round"/>
+  </svg>`,
+  'Thunder Sprite':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Skeletal electrified body -->
+    <ellipse cx="40" cy="46" rx="10" ry="13" stroke="#ffe600" stroke-width="1.8" fill="rgba(20,16,0,0.5)"/>
+    <!-- Skull face with lightning-crack eyes -->
+    <circle cx="40" cy="26" r="11" stroke="#ffe600" stroke-width="2" fill="rgba(15,12,0,0.7)"/>
+    <!-- Hollow eye sockets with lightning bolts inside -->
+    <path d="M33 23 L36 28 L33 28" stroke="#fff488" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M47 23 L44 28 L47 28" stroke="#fff488" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- Jagged grimace mouth -->
+    <path d="M33 32 L35 30 L37 33 L39 30 L41 33 L43 30 L45 32 L47 32" stroke="#ffe600" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    <!-- Crackling antler-horns -->
+    <path d="M32 16 L26 6 L30 12 L24 10 M32 16 L28 8 L32 10" stroke="#fff488" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    <path d="M48 16 L54 6 L50 12 L56 10 M48 16 L52 8 L48 10" stroke="#fff488" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    <!-- Lightning bolt arms -->
+    <path d="M30 44 L18 38 L22 44 L10 42" stroke="#ffe600" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+    <path d="M50 44 L62 38 L58 44 L70 42" stroke="#ffe600" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+    <!-- Bone legs ending in claw -->
+    <path d="M36 59 L32 70 L36 68 L34 74" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M44 59 L48 70 L44 68 L46 74" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- Electricity sparks -->
+    <circle cx="18" cy="38" r="2" fill="#fff488" opacity="0.8"/>
+    <circle cx="62" cy="38" r="2" fill="#fff488" opacity="0.8"/>
+  </svg>`,
+  'Shadow Wraith':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Tattered shroud body rising from darkness -->
+    <path d="M40 14 Q52 20 56 38 Q54 54 52 68 Q48 60 44 68 Q42 60 40 68 Q38 60 36 68 Q32 60 28 68 Q26 54 24 38 Q28 20 40 14Z" stroke="#ffcc66" stroke-width="1.8" fill="rgba(15,8,0,0.7)" stroke-linejoin="round"/>
+    <!-- Tattered lower wisps -->
+    <path d="M28 62 Q24 72 20 76" stroke="#ffcc66" stroke-width="1.2" fill="none" opacity="0.5"/>
+    <path d="M32 66 Q30 74 28 78" stroke="#ffcc66" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M52 62 Q56 72 60 76" stroke="#ffcc66" stroke-width="1.2" fill="none" opacity="0.5"/>
+    <!-- Hollow skull face with no lower jaw -->
+    <path d="M28 24 Q28 12 40 10 Q52 12 52 24 Q50 36 40 38 Q30 36 28 24Z" stroke="#ffcc66" stroke-width="2" fill="rgba(10,5,0,0.8)"/>
+    <!-- Burning hollow eyes -->
+    <ellipse cx="34" cy="22" rx="4" ry="5" fill="#ff8800" opacity="0.95"/>
+    <ellipse cx="46" cy="22" rx="4" ry="5" fill="#ff8800" opacity="0.95"/>
+    <ellipse cx="34" cy="23" rx="2" ry="3" fill="#000"/>
+    <ellipse cx="46" cy="23" rx="2" ry="3" fill="#000"/>
+    <!-- No lower jaw — just darkness and a crack -->
+    <path d="M33 34 L36 30 L40 34 L44 30 L47 34" stroke="#ffcc66" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+    <!-- Clawed ghost hands reaching out -->
+    <path d="M24 42 Q14 36 10 40 L12 38 M10 40 L14 44 M24 44 Q16 42 12 48" stroke="#ffaa44" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M56 42 Q66 36 70 40 L68 38 M70 40 L66 44 M56 44 Q64 42 68 48" stroke="#ffaa44" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  'Inferno Bird':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Demonic flame skull body -->
+    <ellipse cx="40" cy="46" rx="11" ry="9" stroke="#ff4400" stroke-width="2" fill="rgba(50,5,0,0.6)"/>
+    <!-- Horned skull head -->
+    <circle cx="40" cy="28" r="10" stroke="#ff4400" stroke-width="2" fill="rgba(40,4,0,0.7)"/>
+    <!-- Blazing eye sockets -->
+    <ellipse cx="35" cy="26" rx="3.5" ry="4" fill="#ff6600" opacity="0.95"/>
+    <ellipse cx="45" cy="26" rx="3.5" ry="4" fill="#ff6600" opacity="0.95"/>
+    <ellipse cx="35" cy="27" rx="1.8" ry="2.5" fill="#000"/>
+    <ellipse cx="45" cy="27" rx="1.8" ry="2.5" fill="#000"/>
+    <!-- Beak as sharp bony blade -->
+    <path d="M34 33 L28 37 L40 34 L52 37 L46 33" stroke="#ff8833" stroke-width="1.5" fill="rgba(80,20,0,0.7)" stroke-linejoin="round"/>
+    <!-- Flame crown horns -->
+    <path d="M34 18 Q30 8 34 4 Q36 10 33 14 M40 16 Q40 4 42 2 Q43 8 40 14" stroke="#ffaa00" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M46 18 Q50 8 46 4 Q44 10 47 14" stroke="#ffaa00" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- Massive shredded burning wings -->
+    <path d="M30 44 Q14 26 6 32 Q12 34 14 42 Q6 46 10 56 Q16 44 24 48" stroke="#ff4400" stroke-width="2" fill="rgba(60,4,0,0.4)" stroke-linejoin="round"/>
+    <path d="M50 44 Q66 26 74 32 Q68 34 66 42 Q74 46 70 56 Q64 44 56 48" stroke="#ff4400" stroke-width="2" fill="rgba(60,4,0,0.4)" stroke-linejoin="round"/>
+    <!-- Wing bone spars -->
+    <line x1="14" y1="38" x2="22" y2="48" stroke="#cc2200" stroke-width="1" opacity="0.7"/>
+    <line x1="66" y1="38" x2="58" y2="48" stroke="#cc2200" stroke-width="1" opacity="0.7"/>
+    <!-- Bone talon feet -->
+    <path d="M34 55 L28 66 L32 63 L30 70" stroke="#ff4400" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M46 55 L52 66 L48 63 L50 70" stroke="#ff4400" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`,
+  'Frost Wolf':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Undead wolf body — gaunt ribcage visible -->
+    <ellipse cx="44" cy="52" rx="20" ry="13" stroke="#00ccff" stroke-width="2" fill="rgba(0,10,25,0.6)"/>
+    <!-- Ribcage lines -->
+    <path d="M32 46 Q40 44 48 46 M30 50 Q40 48 50 50 M32 54 Q40 52 48 54" stroke="#88eeff" stroke-width="0.8" opacity="0.4"/>
+    <!-- Skull wolf head — massive, wide jaws open -->
+    <path d="M12 26 Q12 14 22 12 Q32 10 36 18 L36 36 Q24 38 16 34 Q10 32 12 26Z" stroke="#00ccff" stroke-width="2" fill="rgba(0,8,20,0.8)"/>
+    <!-- Upper skull brow -->
+    <path d="M14 22 Q18 14 26 12 Q30 14 34 18" stroke="#88eeff" stroke-width="1" fill="none" opacity="0.5"/>
+    <!-- Gaping jaw with jagged teeth -->
+    <path d="M14 34 Q12 42 16 46 L36 44 L36 36" stroke="#00ccff" stroke-width="1.8" fill="rgba(0,5,15,0.9)"/>
+    <path d="M18 36 L18 44 M22 35 L22 43 M26 35 L26 43 M30 35 L30 43 M34 36 L34 43" stroke="#88eeff" stroke-width="1.2"/>
+    <!-- Glowing hollow eyes -->
+    <circle cx="19" cy="22" r="4" fill="#00ffff" opacity="0.8"/>
+    <circle cx="19" cy="22" r="2" fill="#000"/>
+    <!-- Ice spike ears -->
+    <polygon points="18,14 14,2 22,10" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,20,40,0.8)"/>
+    <polygon points="28,12 28,0 34,10" stroke="#88eeff" stroke-width="1.5" fill="rgba(0,20,40,0.8)"/>
+    <!-- Bony neck connection -->
+    <line x1="26" y1="34" x2="32" y2="38" stroke="#00ccff" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="36" y2="40" stroke="#00ccff" stroke-width="1.5"/>
+    <!-- Bone legs with claws -->
+    <line x1="30" y1="64" x2="26" y2="76" stroke="#00ccff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="38" y1="65" x2="36" y2="77" stroke="#00ccff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="52" y1="65" x2="54" y2="77" stroke="#00ccff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="60" y1="64" x2="63" y2="76" stroke="#00ccff" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M23 76 L20 80 M26 76 L26 80 M29 76 L32 80" stroke="#00ccff" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- Ice breath wisps -->
+    <path d="M14 38 Q6 42 4 50" stroke="#88eeff" stroke-width="1" fill="none" opacity="0.5" stroke-dasharray="2,2"/>
+  </svg>`,
+  'Storm Eagle':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Undead skeletal eagle body -->
+    <ellipse cx="40" cy="48" rx="11" ry="8" stroke="#ffe600" stroke-width="2" fill="rgba(15,12,0,0.5)"/>
+    <!-- Exposed spine -->
+    <path d="M40 40 L40 56" stroke="#fff488" stroke-width="1" opacity="0.5" stroke-dasharray="3,2"/>
+    <!-- Skull head with cracked beak -->
+    <circle cx="40" cy="28" r="9" stroke="#ffe600" stroke-width="2" fill="rgba(12,10,0,0.8)"/>
+    <!-- Cracked skull lines -->
+    <path d="M38 20 L36 26 M42 20 L44 28" stroke="#fff488" stroke-width="0.8" opacity="0.5"/>
+    <!-- Hollow burning eye sockets -->
+    <circle cx="35" cy="27" r="3.5" fill="#ffaa00" opacity="0.9"/>
+    <circle cx="45" cy="27" r="3.5" fill="#ffaa00" opacity="0.9"/>
+    <circle cx="35" cy="27" r="1.5" fill="#000"/>
+    <circle cx="45" cy="27" r="1.5" fill="#000"/>
+    <!-- Cracked sharp beak -->
+    <path d="M33 33 L26 38 L34 35" stroke="#ffe600" stroke-width="2" fill="rgba(30,22,0,0.8)" stroke-linejoin="round"/>
+    <line x1="26" y1="38" x2="30" y2="35" stroke="#fff488" stroke-width="0.8"/>
+    <!-- Bone-spur crest -->
+    <path d="M36 20 L32 10 L36 16 L34 8 M40 19 L40 6 M44 20 L48 10 L44 16 L46 8" stroke="#fff488" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Skeletal tattered wings - massive span -->
+    <path d="M30 46 Q16 32 4 36 Q10 38 12 46 Q4 50 8 60 Q14 48 24 52" stroke="#ffe600" stroke-width="2" fill="rgba(20,16,0,0.35)" stroke-linejoin="round"/>
+    <path d="M50 46 Q64 32 76 36 Q70 38 68 46 Q76 50 72 60 Q66 48 56 52" stroke="#ffe600" stroke-width="2" fill="rgba(20,16,0,0.35)" stroke-linejoin="round"/>
+    <!-- Wing bone ribs -->
+    <line x1="10" y1="40" x2="18" y2="50" stroke="#cc9900" stroke-width="1" opacity="0.7"/>
+    <line x1="16" y1="36" x2="22" y2="48" stroke="#cc9900" stroke-width="1" opacity="0.6"/>
+    <line x1="70" y1="40" x2="62" y2="50" stroke="#cc9900" stroke-width="1" opacity="0.7"/>
+    <!-- Talon feet -->
+    <path d="M35 56 L30 66 L34 63 L32 70 M38 57 L38 70" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M45 56 L50 66 L46 63 L48 70 M42 57 L42 70" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`,
+  'Void Serpent':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Massive coiling serpentine spine of darkness -->
+    <path d="M55 6 Q70 14 65 28 Q60 40 48 42 Q36 44 30 56 Q24 68 32 76" stroke="#ffcc66" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <!-- Outer glow/shadow of body -->
+    <path d="M55 6 Q70 14 65 28 Q60 40 48 42 Q36 44 30 56 Q24 68 32 76" stroke="#ff8800" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.15"/>
+    <!-- Scale pattern on body -->
+    <path d="M60 18 Q62 14 64 18 M56 26 Q58 22 60 26 M50 34 Q52 30 54 34 M44 40 Q46 36 48 40 M38 48 Q40 44 42 48 M34 56 Q36 52 38 56" stroke="#ffaa44" stroke-width="0.8" opacity="0.6"/>
+    <!-- Terrifying fanged skull head -->
+    <path d="M48 4 Q62 4 64 14 Q66 24 58 28 Q54 30 50 28 Q44 30 42 28 Q34 24 36 14 Q38 4 48 4Z" stroke="#ffcc66" stroke-width="2" fill="rgba(15,8,0,0.85)"/>
+    <!-- Slit pupils glowing red -->
+    <ellipse cx="44" cy="14" rx="4" ry="5" fill="#ff4400" opacity="0.9"/>
+    <ellipse cx="56" cy="14" rx="4" ry="5" fill="#ff4400" opacity="0.9"/>
+    <ellipse cx="44" cy="14" rx="1" ry="4" fill="#000"/>
+    <ellipse cx="56" cy="14" rx="1" ry="4" fill="#000"/>
+    <!-- Forked tongue -->
+    <path d="M48 28 L48 36 L45 40 M48 36 L51 40" stroke="#ff4400" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Fangs -->
+    <path d="M42 24 L40 30 L44 26 M54 24 L56 30 L52 26" stroke="#ffcc66" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    <!-- Bone ring coil detail -->
+    <circle cx="20" cy="32" r="8" stroke="#ffcc66" stroke-width="1.5" opacity="0.5" fill="none"/>
+    <circle cx="20" cy="32" r="4" stroke="#ffcc66" stroke-width="1" opacity="0.35" fill="none"/>
+    <circle cx="20" cy="32" r="1.5" fill="#ffcc66" opacity="0.7"/>
+  </svg>`,
+  'The Witch':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Jagged witch hat -->
+    <path d="M40 2 L58 28 L22 28 Z" stroke="#cc44ff" stroke-width="2" fill="rgba(20,0,40,0.8)" stroke-linejoin="round"/>
+    <!-- Hat brim with torn edge -->
+    <path d="M16 30 Q18 26 22 28 L58 28 Q62 26 64 30 Q60 33 40 33 Q20 33 16 30Z" stroke="#cc44ff" stroke-width="1.5" fill="rgba(15,0,30,0.9)"/>
+    <!-- Skull face instead of normal face -->
+    <path d="M26 38 Q26 26 40 24 Q54 26 54 38 Q54 50 48 52 Q44 54 40 54 Q36 54 32 52 Q26 50 26 38Z" stroke="#cc44ff" stroke-width="2" fill="rgba(12,0,24,0.85)"/>
+    <!-- Cracked skull lines -->
+    <path d="M40 26 L38 34 M44 28 L46 36" stroke="#ee99ff" stroke-width="0.8" opacity="0.5"/>
+    <!-- Hollow menacing eyes -->
+    <ellipse cx="34" cy="36" rx="4" ry="5" fill="#aa22ff" opacity="0.95"/>
+    <ellipse cx="46" cy="36" rx="4" ry="5" fill="#aa22ff" opacity="0.95"/>
+    <ellipse cx="34" cy="37" rx="2" ry="3" fill="#000"/>
+    <ellipse cx="46" cy="37" rx="2" ry="3" fill="#000"/>
+    <!-- Jagged grinning teeth -->
+    <path d="M31 47 L33 44 L35 47 L37 44 L39 47 L41 44 L43 47 L45 44 L47 47 L49 47" stroke="#cc44ff" stroke-width="1.5" fill="rgba(10,0,20,0.8)" stroke-linejoin="round"/>
+    <!-- Tattered dark robes -->
+    <path d="M26 54 Q14 60 12 74 L68 74 Q66 60 54 54" stroke="#9922cc" stroke-width="2" fill="rgba(10,0,22,0.7)" stroke-linejoin="round"/>
+    <!-- Robe tears -->
+    <path d="M20 64 L16 74 M60 64 L64 74 M40 56 L40 74" stroke="#9922cc" stroke-width="0.8" opacity="0.4"/>
+    <!-- Left claw hand -->
+    <path d="M26 56 Q16 50 10 54 L12 52 L10 54 L14 58 L10 60 L14 64" stroke="#cc44ff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Staff — right hand gripping it, angled across body -->
+    <line x1="54" y1="54" x2="72" y2="16" stroke="#6b22aa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="54" y1="54" x2="72" y2="16" stroke="#cc44ff" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+    <!-- Staff orb top -->
+    <circle cx="72" cy="14" r="5.5" stroke="#ee99ff" stroke-width="1.5" fill="rgba(60,0,100,0.8)"/>
+    <circle cx="72" cy="14" r="3" fill="#cc44ff" opacity="0.95"/>
+    <circle cx="70" cy="12" r="1.2" fill="#fff" opacity="0.6"/>
+    <!-- Orb glow wisps -->
+    <path d="M68 9 L66 6 M72 8 L72 4 M76 9 L78 6" stroke="#ee99ff" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+    <!-- Right claw gripping staff -->
+    <path d="M54 56 Q62 50 66 52 L64 50 L66 52 L63 56 L66 58 L63 62" stroke="#cc44ff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  'Lava Golem':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Massive molten torso cracked rock with glowing lava veins -->
+    <path d="M20 40 L16 70 L40 76 L64 70 L60 40 Z" stroke="#ff4400" stroke-width="2" fill="rgba(40,8,0,0.75)"/>
+    <!-- Lava crack veins on body -->
+    <path d="M28 44 L24 58 L30 54 L26 66" stroke="#ff6600" stroke-width="1.5" opacity="0.9"/>
+    <path d="M40 42 L38 56 L42 52 L40 68" stroke="#ff8800" stroke-width="1.5" opacity="0.9"/>
+    <path d="M52 44 L56 58 L50 54 L54 66" stroke="#ff6600" stroke-width="1.5" opacity="0.9"/>
+    <!-- Inner glow on cracks -->
+    <path d="M28 44 L24 58 L30 54 L26 66" stroke="#ffcc00" stroke-width="0.6" opacity="0.7"/>
+    <path d="M40 42 L38 56 L42 52 L40 68" stroke="#ffaa00" stroke-width="0.6" opacity="0.7"/>
+    <!-- Hulking rock-slab head -->
+    <path d="M22 20 L22 40 L58 40 L58 20 Q40 10 22 20Z" stroke="#ff4400" stroke-width="2" fill="rgba(30,5,0,0.85)"/>
+    <!-- Glowing magma eye sockets -->
+    <ellipse cx="32" cy="28" rx="5" ry="5" fill="#ff6600" opacity="0.95"/>
+    <ellipse cx="48" cy="28" rx="5" ry="5" fill="#ff6600" opacity="0.95"/>
+    <ellipse cx="32" cy="28" rx="2.5" ry="2.5" fill="#ffcc00"/>
+    <ellipse cx="48" cy="28" rx="2.5" ry="2.5" fill="#ffcc00"/>
+    <!-- Rock crack across face -->
+    <path d="M22 34 L30 30 L38 34 L46 30 L58 34" stroke="#ff5500" stroke-width="1" opacity="0.6"/>
+    <!-- Molten shoulder plates and fists -->
+    <path d="M20 40 L6 34 L4 42 L10 44 L6 50 L12 54 L20 46" stroke="#ff4400" stroke-width="2.2" fill="rgba(50,8,0,0.6)" stroke-linejoin="round"/>
+    <path d="M60 40 L74 34 L76 42 L70 44 L74 50 L68 54 L60 46" stroke="#ff4400" stroke-width="2.2" fill="rgba(50,8,0,0.6)" stroke-linejoin="round"/>
+    <!-- Lava drips from fists -->
+    <path d="M8 52 L6 60 M12 54 L11 62" stroke="#ff8800" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+    <path d="M72 52 L74 60 M68 54 L69 62" stroke="#ff8800" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+    <!-- Rock spike crown -->
+    <path d="M28 20 L24 8 L30 16 M36 18 L34 4 L40 14 M44 18 L46 4 L40 14 M52 20 L56 8 L50 16" stroke="#ff5500" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- Lava pool base glow -->
+    <ellipse cx="40" cy="76" rx="18" ry="4" fill="#ff4400" opacity="0.3"/>
+  </svg>`,
+  'Smash Goblin':`<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Massive brutish mutated body -->
+    <path d="M24 42 L20 70 L40 74 L60 70 L56 42 Z" stroke="#cc44ff" stroke-width="2" fill="rgba(18,0,36,0.65)"/>
+    <!-- Chest scar lines -->
+    <path d="M32 48 L28 62 M40 46 L40 66 M48 48 L52 62" stroke="#ee99ff" stroke-width="0.8" opacity="0.35"/>
+    <!-- Grotesque warped skull head — oversized -->
+    <path d="M18 28 Q18 10 40 8 Q62 10 62 28 Q62 40 54 44 L40 46 L26 44 Q18 40 18 28Z" stroke="#cc44ff" stroke-width="2.2" fill="rgba(14,0,28,0.8)"/>
+    <!-- Brutal mismatched eye sockets -->
+    <circle cx="30" cy="24" r="6" fill="#9900cc" opacity="0.9"/>
+    <circle cx="30" cy="24" r="3" fill="#000"/>
+    <ellipse cx="50" cy="22" rx="5" ry="7" fill="#ff2200" opacity="0.9"/>
+    <ellipse cx="50" cy="22" rx="2" ry="4" fill="#000"/>
+    <!-- Massive tusk fangs -->
+    <path d="M30 40 L26 52 L30 48" stroke="#ee99ff" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M50 40 L54 52 L50 48" stroke="#ee99ff" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <!-- Twisted horns -->
+    <path d="M22 18 Q14 10 10 4 Q16 8 18 14 Q14 12 16 18" stroke="#cc44ff" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M56 16 Q66 8 70 2 Q64 8 64 14 Q68 10 64 18" stroke="#cc44ff" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <!-- One normal arm, one mutated spike arm -->
+    <path d="M24 46 L10 40 L6 46 L12 48 L6 54 L12 58 L18 52 L20 58" stroke="#cc44ff" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+    <path d="M56 46 L70 36 L74 30 M70 36 L76 40 M70 36 L72 44" stroke="#cc44ff" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <!-- Stubby claw feet -->
+    <path d="M28 70 L24 78 M32 72 L30 78 M36 72 L36 78" stroke="#cc44ff" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M52 70 L56 78 M48 72 L50 78 M44 72 L44 78" stroke="#cc44ff" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`,
+};
+
+const CARD_DEFS=[
+  {name:'Fire Dragon',   type:'fire',     atk:8,def:3, ability:{id:'burn',    icon:'🔥',name:'Burn',    desc:"-1 DEF to opponent's next card"}},
+  {name:'Ice Golem',     type:'ice',      atk:4,def:9, ability:{id:'freeze',  icon:'❄️',name:'Freeze',  desc:'Freezes a random opponent card'}},
+  {name:'Thunder Sprite',type:'electric', atk:7,def:5, ability:{id:'chain',   icon:'⚡',name:'Chain Lightning', desc:'+2 ATK if last card was Electric'}},
+  {name:'Shadow Wraith', type:'shadow',   atk:6,def:6},
+  {name:'Inferno Bird',  type:'fire',     atk:9,def:2},
+  {name:'Frost Wolf',    type:'ice',      atk:5,def:8},
+  {name:'Storm Eagle',   type:'electric', atk:6,def:4, ability:{id:'shock', icon:'⚡',name:'Shock', desc:"Zaps opponent's card: -3 DEF before battle"}},
+  {name:'Void Serpent',  type:'shadow',   atk:5,def:8},
+  {name:'Lava Golem',    type:'fire',     atk:5,def:7, ability:{id:'lava-shield', icon:'🛡️',name:'Lava Shield', desc:"Blocks opponent's ability (not Chain Lightning)"}},
+  {name:'Smash Goblin',  type:'cursed',   atk:6,def:7},
+  {name:'The Witch',     type:'cursed',   atk:6,def:5, ability:{id:'poison',  icon:'☠️',name:'Poison',  desc:"-2 ATK to opponent's next card"}},
+];
+
+/* ═══════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let state={
+  hands:{p1:[],p2:[]},scores:{p1:0,p2:0},
+  round:1,phase:'p1-pick',picked:{p1:null,p2:null},vsAI:false,
+  // ability tracking
+  debuffs:{p1:{defMod:0,atkMod:0},p2:{defMod:0,atkMod:0}},
+  lastType:{p1:null,p2:null},
+};
+
+/* ═══════════════════════════════════════════════
+   CARD HTML
+════════════════════════════════════════════════ */
+function cardHTML(card,clickFn,extra='',facedown=false){
+  // Apply any active debuffs for display (only when rendering for a specific player's hand)
+  const atkVal = card._atkMod ? card.atk + card._atkMod : card.atk;
+  const defVal = card._defMod ? card.def + card._defMod : card.def;
+  const atkDebuffed = card._atkMod && card._atkMod < 0;
+  const defDebuffed = card._defMod && card._defMod < 0;
+
+  const abilityBar = card.ability ? `
+    <div class="ability-bar">
+      <div class="ability-icon">${card.ability.icon}</div>
+      <div class="ability-text">
+        <div class="ability-name">${card.ability.name}</div>
+        <div class="ability-desc">${card.ability.desc}</div>
+      </div>
+    </div>` : '';
+
+  const front=`
+    <div class="card-front">
+      <div class="card-header">
+        <div class="card-name">${card.name}</div>
+        <div class="type-badge">${card.type}</div>
+      </div>
+      <div class="art-panel">
+        <div class="art-bg"></div>
+        <div class="art-svg">${CARD_ART[card.name]||''}</div>
+      </div>
+      <div class="card-stats">
+        <hr class="divider">
+        <div class="stat-row"><span class="stat-label">ATK</span><div class="stat-bar"><div class="stat-bar-fill" style="width:${atkVal*10}%"></div></div><span class="stat-value${atkDebuffed?' debuffed':''}">${atkVal}</span></div>
+        <div class="stat-row"><span class="stat-label">DEF</span><div class="stat-bar"><div class="stat-bar-fill" style="width:${defVal*10}%"></div></div><span class="stat-value${defDebuffed?' debuffed':''}">${defVal}</span></div>
+      </div>
+      ${abilityBar}
+    </div>`;
+  const back=`<div class="card-back">🂠</div>`;
+  const oc=clickFn?`onclick="${clickFn}"`:'';
+  const frozenClass = card._frozen ? ' frozen' : '';
+  return `<div class="card ${card.type} ${extra}${facedown?' facedown':''}${frozenClass}" ${oc}><div class="card-flip">${front}${back}</div></div>`;
+}
+function arenaCardHTML(c,fd){return cardHTML(c,'','no-hover',fd)}
+
+function flipCard(wrapId){
+  const w=document.getElementById(wrapId);
+  if(!w)return;
+  const c=w.querySelector('.card.facedown');
+  if(c)c.classList.remove('facedown');
+}
+
+/* ═══════════════════════════════════════════════
+   DEAL
+════════════════════════════════════════════════ */
+function dealHands(){
+  const d=[...CARD_DEFS].sort(()=>Math.random()-.5);
+  state.hands.p1=d.slice(0,4).map(c=>({...c}));
+  state.hands.p2=d.slice(4,8).map(c=>({...c}));
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════ */
+function renderHands(){
+  const hp1=document.getElementById('hand-p1');
+  const hp2=document.getElementById('hand-p2');
+  hp1.innerHTML=state.hands.p1.map((c,i)=>{
+    const used=c._used,sel=state.picked.p1===i,frozen=c._frozen;
+    const click=state.phase==='p1-pick'&&!used&&!frozen?`pickCard('p1',${i})`:'';
+    return cardHTML(c,click,used?'disabled':frozen?'disabled':sel?'selected':'');
+  }).join('');
+  hp2.innerHTML=state.hands.p2.map((c,i)=>{
+    const used=c._used,sel=state.picked.p2===i,frozen=c._frozen;
+    const click=state.phase==='p2-pick'&&!used&&!frozen?`pickCard('p2',${i})`:'';
+    return cardHTML(c,click,used?'disabled':frozen?'disabled':sel?'selected':'');
+  }).join('');
+}
+function renderArena(){
+  const fd=state.phase==='p1-pick'||state.phase==='p2-pick';
+  const ap1=document.getElementById('arena-p1');
+  const ap2=document.getElementById('arena-p2');
+  ap1.innerHTML=state.picked.p1!==null?arenaCardHTML(state.hands.p1[state.picked.p1],fd):'<div class="arena-empty">Pick a card</div>';
+  ap2.innerHTML=state.picked.p2!==null?arenaCardHTML(state.hands.p2[state.picked.p2],fd):'<div class="arena-empty">Pick a card</div>';
+}
+function renderScore(){
+  for(let i=0;i<3;i++){
+    document.getElementById(`pip-p1-${i}`).classList.toggle('filled',i<state.scores.p1);
+    document.getElementById(`pip-p2-${i}`).classList.toggle('filled',i<state.scores.p2);
+  }
+  document.getElementById('round-label').textContent=`Round ${state.round}`;
+}
+function setPhase(html){document.getElementById('phase-text').innerHTML=html}
+function showBattleBtn(v){document.getElementById('battle-btn').style.display=v?'':'none'}
+function showNextBtn(v){document.getElementById('next-btn').style.display=v?'':'none'}
+
+/* ═══════════════════════════════════════════════
+   GAME FLOW
+════════════════════════════════════════════════ */
+function startGame(vsAI=false){
+  state={hands:{p1:[],p2:[]},scores:{p1:0,p2:0},round:1,phase:'p1-pick',picked:{p1:null,p2:null},vsAI,
+    debuffs:{p1:{defMod:0,atkMod:0},p2:{defMod:0,atkMod:0}},
+    lastType:{p1:null,p2:null},
+  };
+  dealHands();
+  document.getElementById('score-name-p2').textContent=vsAI?'AI':'Player 2';
+  document.getElementById('hand-label-p2').textContent=vsAI?'AI Hand':'Player 2 Hand';
+  document.getElementById('vs-name-p2').textContent=vsAI?'AI':'PLAYER 2';
+  showScreen('game-screen');
+  enterPhase('p1-pick');
+}
+
+let _handoffCb=null;
+function showHandoff(player,msg,cb){
+  const ov=document.getElementById('handoff-overlay');
+  document.getElementById('handoff-icon').textContent=player==='p1'?'🛡️':'⚔️';
+  document.getElementById('handoff-title').textContent=msg;
+  document.getElementById('handoff-title').className=`handoff-title ${player}`;
+  document.getElementById('handoff-btn').className=`handoff-btn ${player}`;
+  _handoffCb=cb;
+  ov.classList.add('visible');
+}
+function dismissHandoff(){
+  document.getElementById('handoff-overlay').classList.remove('visible');
+  if(_handoffCb){const cb=_handoffCb;_handoffCb=null;cb()}
+}
+
+function enterPhase(phase){
+  state.phase=phase;
+  showBattleBtn(false);showNextBtn(false);
+  const ai=state.vsAI;
+  const aiEl=document.getElementById('ai-thinking');
+  const hp2=document.getElementById('hand-p2');
+  if(phase==='p1-pick'){
+    setPhase('<span class="hl-p1">Player 1</span> — choose your card!');
+    document.getElementById('hand-row-p1').style.display='';
+    document.getElementById('hand-row-p2').style.display=ai?'none':'';
+    if(aiEl)aiEl.style.display='none';if(hp2)hp2.style.display='';
+  }else if(phase==='p2-pick'){
+    if(ai){
+      setPhase('🤖 AI is choosing...');
+      document.getElementById('hand-row-p1').style.display='none';
+      document.getElementById('hand-row-p2').style.display='';
+      if(hp2)hp2.style.display='none';if(aiEl)aiEl.style.display='';
+    }else{
+      setPhase('<span class="hl-p2">Player 2</span> — choose your card!');
+      document.getElementById('hand-row-p1').style.display='none';
+      document.getElementById('hand-row-p2').style.display='';
+      if(hp2)hp2.style.display='';if(aiEl)aiEl.style.display='none';
+    }
+  }else if(phase==='battle'){
+    setPhase('Both cards chosen — ready to battle!');
+    document.getElementById('hand-row-p1').style.display='';
+    document.getElementById('hand-row-p2').style.display=ai?'none':'';
+    if(hp2)hp2.style.display='';if(aiEl)aiEl.style.display='none';
+    setTimeout(()=>{flipCard('arena-p1');flipCard('arena-p2')},100);
+    showBattleBtn(true);
+  }
+  renderArena();renderHands();renderScore();
+}
+
+function pickCard(player,idx){
+  if(state.phase!==`${player}-pick`)return;
+  if(state.hands[player][idx]._used)return;
+  if(state.hands[player][idx]._frozen)return;
+  state.picked[player]=idx;
+  renderHands();renderArena();
+  if(player==='p1'){
+    if(state.vsAI){
+      setTimeout(()=>enterPhase('p2-pick'),280);
+      setTimeout(()=>aiPick(),880);
+    }else{
+      setTimeout(()=>showHandoff('p2','Pass to Player 2',()=>enterPhase('p2-pick')),280);
+    }
+  }else{
+    setTimeout(()=>showHandoff('p1','Pass Back for Battle!',()=>enterPhase('battle')),280);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AI
+════════════════════════════════════════════════ */
+function aiPick(){
+  const hand=state.hands.p2;
+  const avail=hand.map((c,i)=>({c,i})).filter(({c})=>!c._used&&!c._frozen);
+  if(!avail.length)return;
+  const p1rem=state.hands.p1.filter(c=>!c._used);
+  const avgDef=p1rem.length?p1rem.reduce((s,c)=>s+c.def,0)/p1rem.length:5;
+  const scored=avail.map(({c,i})=>({i,score:(c.atk-avgDef)+c.def*.3+Math.random()*2.5}));
+  scored.sort((a,b)=>b.score-a.score);
+  state.picked.p2=scored[0].i;
+  renderArena();
+  setTimeout(()=>enterPhase('battle'),480);
+}
+
+/* ═══════════════════════════════════════════════
+   ABILITY VISUAL EFFECT
+════════════════════════════════════════════════ */
+let _abilityToken = 0; // increments each time a new effect starts; stale timeouts check before acting
+
+function triggerAbilityEffect(type, bannerText, subText, cb) {
+  const token = ++_abilityToken;          // claim ownership of the overlay
+  const ov  = document.getElementById('ability-overlay');
+  const ban = document.getElementById('ability-banner');
+  const sub = document.getElementById('ability-sub');
+
+  ban.textContent = bannerText;
+  sub.textContent = subText;
+  ov.className = `ability-overlay ${type}`;
+  // force reflow then show
+  void ov.offsetWidth;
+  ov.classList.add('show');
+
+  // spawn floating particles
+  const colors = {
+    burn:   ['#ff5500','#ff8833','#ffaa55','#fff'],
+    freeze: ['#00ccff','#88eeff','#aaffff','#fff'],
+    chain:  ['#ffe600','#fff488','#ffcc00','#fff'],
+    shock:  ['#ffe600','#fff488','#ffcc00','#fff'],
+    poison: ['#cc44ff','#ee99ff','#9922cc','#fff'],
+    'lava-shield': ['#ff5500','#ff8833','#ffcc00','#ff2200'],
+  }[type] || ['#fff'];
+
+  // Witch staff-bang animation
+  if (type === 'poison') {
+    const staffSvg   = document.getElementById('witch-staff-svg');
+    const orbInner   = document.getElementById('staff-orb-inner');
+    const ring1      = document.getElementById('ring1');
+    const ring2      = document.getElementById('ring2');
+    const ring3      = document.getElementById('ring3');
+    const flash      = document.getElementById('impact-flash');
+
+    // Reset all classes
+    [ring1, ring2, ring3, flash].forEach(el => { if(el) el.className = ''; });
+    if (staffSvg) staffSvg.className = 'witch-staff-svg';
+    void staffSvg?.offsetWidth;
+
+    const bangParticles = () => {
+      const wrap = document.getElementById('witch-staff-wrap');
+      const rect = wrap?.getBoundingClientRect();
+      if (!rect) return;
+      for (let i = 0; i < 14; i++) {
+        const p = document.createElement('div');
+        const sz = 3 + Math.random() * 7;
+        const angle = -Math.PI * (.2 + Math.random() * .6); // upward spread
+        const dist  = 50 + Math.random() * 120;
+        p.style.cssText = `
+          position:fixed;border-radius:50%;pointer-events:none;z-index:249;
+          left:${rect.left + rect.width/2}px;top:${rect.bottom - 16}px;
+          width:${sz}px;height:${sz}px;
+          background:${colors[Math.floor(Math.random()*colors.length)]};
+          box-shadow:0 0 8px currentColor;
+          --px:${Math.cos(angle)*dist}px;--py:${Math.sin(angle)*dist}px;
+          animation:abilityParticle ${.45+Math.random()*.4}s ${Math.random()*.1}s ease-out forwards;
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+      }
+    };
+
+    // T=0: raise staff slowly
+    staffSvg.classList.add('raise');
+
+    // T=450ms: first slam
+    setTimeout(() => {
+      staffSvg.classList.remove('raise');
+      void staffSvg.offsetWidth;
+      staffSvg.classList.add('slam');
+    }, 450);
+
+    // T=730ms: impact — rings + flash + orb pulse + particles
+    setTimeout(() => {
+      [ring1, ring2, ring3, flash].forEach(el => { if(el) el.className = 'pop'; });
+      if (orbInner) { orbInner.classList.remove('pulse'); void orbInner.offsetWidth; orbInner.classList.add('pulse'); }
+      bangParticles();
+    }, 730);
+
+    // T=1050ms: quick raise again
+    setTimeout(() => {
+      staffSvg.classList.remove('slam');
+      void staffSvg.offsetWidth;
+      staffSvg.classList.add('raise2');
+    }, 1050);
+
+    // T=1380ms: second slam
+    setTimeout(() => {
+      staffSvg.classList.remove('raise2');
+      void staffSvg.offsetWidth;
+      staffSvg.classList.add('slam2');
+    }, 1380);
+
+    // T=1620ms: second impact
+    setTimeout(() => {
+      [ring1, ring2, ring3, flash].forEach(el => { if(el) el.className = 'pop2'; });
+      if (orbInner) { orbInner.classList.remove('pulse'); void orbInner.offsetWidth; orbInner.classList.add('pulse'); }
+      bangParticles();
+    }, 1620);
+  }
+
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'ability-particle';
+    const sz = 4 + Math.random() * 10;
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 80 + Math.random() * 200;
+    p.style.cssText = `
+      left:${40+Math.random()*20}%;top:${35+Math.random()*30}%;
+      width:${sz}px;height:${sz}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      box-shadow:0 0 8px currentColor;
+      --px:${Math.cos(angle)*dist}px;--py:${Math.sin(angle)*dist}px;
+      animation-duration:${.7+Math.random()*.6}s;
+      animation-delay:${Math.random()*.2}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1400);
+  }
+
+  setTimeout(() => {
+    if (_abilityToken !== token) { if(cb) cb(); return; } // another effect took over — just fire callback
+    ov.classList.add('hide');
+    setTimeout(() => {
+      if (_abilityToken === token) ov.className = 'ability-overlay'; // only reset if still owner
+      if(cb) cb();
+    }, 400);
+  }, 2000);
+}
+
+/* ═══════════════════════════════════════════════
+   BATTLE — cinematic sequence with abilities
+════════════════════════════════════════════════ */
+function doBattle(){
+  const c1 = state.hands.p1[state.picked.p1];
+  const c2 = state.hands.p2[state.picked.p2];
+
+  // Apply incoming debuffs to these cards before calculating
+  if (state.debuffs.p1.defMod) { c1._defMod = state.debuffs.p1.defMod; }
+  if (state.debuffs.p1.atkMod) { c1._atkMod = state.debuffs.p1.atkMod; }
+  if (state.debuffs.p2.defMod) { c2._defMod = state.debuffs.p2.defMod; }
+  if (state.debuffs.p2.atkMod) { c2._atkMod = state.debuffs.p2.atkMod; }
+
+  // Detect shock — applied visually mid-sequence, but pre-calculated now for win resolution
+  const shockCaster = c1.ability?.id === 'shock' ? 'p1' : c2.ability?.id === 'shock' ? 'p2' : null;
+  const shockDelay = shockCaster ? 3000 : 0; // banner(2000) + fade(400) + zap(600)
+
+  // Lava Shield: blocks all abilities except chain lightning
+  // lavaShielder = the player who has Lava Golem; lavaBlocks = what it blocks this round
+  const lavaShielder = c1.ability?.id === 'lava-shield' ? 'p1' : c2.ability?.id === 'lava-shield' ? 'p2' : null;
+  const opponentOfLava = lavaShielder === 'p1' ? 'p2' : lavaShielder === 'p2' ? 'p1' : null;
+  // Shock is blockable; lava-shield itself and chain are not counted as "opponent ability to block"
+  const shockBlocked = lavaShielder && shockCaster === opponentOfLava;
+  // Extra block delay: if shock was blocked, show "BLOCKED!" after the shock sequence (shockDelay + 2400ms for blocked banner)
+  const blockedShockDelay = shockBlocked ? shockDelay + 2400 : 0;
+
+  // Resolve effective stats — shock bonus factored into locals only, NOT applied to card yet
+  // (card._defMod gets set later at the moment the zap fires, so the UI updates then)
+  let atk1 = c1.atk + (c1._atkMod||0);
+  let def1 = c1.def + (c1._defMod||0);
+  let atk2 = c2.atk + (c2._atkMod||0);
+  let def2 = c2.def + (c2._defMod||0);
+  // Only apply shock to stats if NOT blocked
+  if (shockCaster === 'p1' && !shockBlocked) def2 -= 3;
+  if (shockCaster === 'p2' && !shockBlocked) def1 -= 3;
+
+  // Chain Lightning: if last played type by same player was electric, +2 ATK
+  let chainBonus1 = 0, chainBonus2 = 0;
+  if (c1.ability?.id === 'chain' && state.lastType.p1 === 'electric') { atk1 += 2; chainBonus1 = 2; }
+  if (c2.ability?.id === 'chain' && state.lastType.p2 === 'electric') { atk2 += 2; chainBonus2 = 2; }
+
+  const s1 = atk1 - def2;
+  const s2 = atk2 - def1;
+  let winner = null;
+  if (s1 > s2) winner = 'p1'; else if (s2 > s1) winner = 'p2';
+
+  showBattleBtn(false);
+
+  // Chain Lightning fires BEFORE the arena — show it first, then delay the whole sequence
+  const chainDelay = (chainBonus1 || chainBonus2) ? 2400 : 0;
+  if (chainBonus1 || chainBonus2) {
+    triggerAbilityEffect('chain', '⚡ CHAIN LIGHTNING!', `Thunder Sprite gains +2 ATK from Electric combo!`);
+  }
+
+  const ov    = document.getElementById('battle-arena-overlay');
+  const fp1   = document.getElementById('arena-fighter-p1');
+  const fp2   = document.getElementById('arena-fighter-p2');
+  const burst = document.getElementById('clash-burst');
+  const stats = document.getElementById('arena-stats');
+  const vs    = document.getElementById('arena-vs-splash');
+  document.getElementById('arena-round-lbl').textContent = `Round ${state.round}`;
+
+  fp1.innerHTML = cardHTML(c1,'','no-hover',true);
+  fp2.innerHTML = cardHTML(c2,'','no-hover',true);
+  fp1.className = 'arena-fighter p1';
+  fp2.className = 'arena-fighter p2';
+  burst.className = 'clash-burst'; burst.innerHTML = '';
+  stats.className = 'arena-stats'; stats.innerHTML = '';
+  vs.className = 'arena-vs-splash';
+  document.getElementById('shock-zap').className = 'shock-zap';
+
+  const rc = ['#fff','#ffe055','#ff8844','#88ccff','#cc88ff','#88ffcc','#ff6644'];
+  for (let i = 0; i < 16; i++) {
+    const ray = document.createElement('div');
+    ray.className = 'clash-ray';
+    const ang = (360/16)*i + (Math.random()*6-3);
+    const len = 30 + Math.random()*50;
+    ray.style.cssText = `width:${len}px;transform:rotate(${ang}deg);background:linear-gradient(90deg,${rc[i%rc.length]},transparent);`;
+    burst.appendChild(ray);
+  }
+  const star = document.createElement('div'); star.className = 'clash-star'; burst.appendChild(star);
+
+  // C = offset from chain delay, S = further offset for shock mid-sequence + possible blocked banner
+  const C  = ms => ms + chainDelay;
+  const CS = ms => ms + chainDelay + shockDelay + blockedShockDelay;
+
+  setTimeout(() => ov.classList.add('visible'), C(0));
+  setTimeout(() => { fp1.classList.add('enter'); fp2.classList.add('enter'); }, C(100));
+
+  // T=650 — flip cards face-up
+  setTimeout(() => {
+    fp1.querySelector('.card')?.classList.remove('facedown');
+    fp2.querySelector('.card')?.classList.remove('facedown');
+  }, C(650));
+
+  // SHOCK SEQUENCE: banner at T=900, zap at T=3300
+  if (shockCaster) {
+    const targetFighter = shockCaster === 'p1' ? fp2 : fp1;
+    const targetClass   = shockCaster === 'p1' ? 'p2' : 'p1';
+
+    // T=900 — show shock banner
+    setTimeout(() => {
+      triggerAbilityEffect('chain', '⚡ SHOCK!', 'Storm Eagle zaps the opponent — DEF -3!');
+    }, C(900));
+
+    if (!shockBlocked) {
+      // T=3300 — fire zap, apply DEF debuff visually
+      setTimeout(() => {
+        fireShockZap(shockCaster, targetFighter, targetClass);
+        if (shockCaster === 'p1') { c2._defMod = (c2._defMod||0) - 3; targetFighter.innerHTML = cardHTML(c2,'','no-hover'); }
+        if (shockCaster === 'p2') { c1._defMod = (c1._defMod||0) - 3; targetFighter.innerHTML = cardHTML(c1,'','no-hover'); }
+      }, C(3300));
+    } else {
+      // Shock is blocked — still fire the zap visually (the bolt hits the shield), but no DEF reduction
+      setTimeout(() => {
+        fireShockZap(shockCaster, targetFighter, targetClass);
+      }, C(3300));
+      // After the shock animation, show BLOCKED! banner
+      setTimeout(() => {
+        const blockerName = lavaShielder === 'p1' ? c1.name : c2.name;
+        triggerAbilityEffect('lava-shield', '🛡️ BLOCKED!', `${blockerName}'s Lava Shield absorbs the Shock!`);
+      }, C(3300) + 700); // 700ms after zap fires (zap lasts ~600ms)
+    }
+  }
+
+  // VS splash — delayed by shockDelay if shock fired
+  setTimeout(() => vs.classList.add('show'), CS(1000));
+  setTimeout(() => {
+    vs.classList.remove('show'); vs.classList.add('out');
+    fp1.classList.remove('enter'); fp2.classList.remove('enter');
+    fp1.classList.add('charge'); fp2.classList.add('charge');
+  }, CS(1700));
+  setTimeout(() => {
+    burst.classList.add('pop');
+    ov.classList.add('shake-anim');
+    ov.addEventListener('animationend', () => ov.classList.remove('shake-anim'), {once:true});
+    triggerSparks();
+  }, CS(2100));
+
+  // Recoil + score
+  setTimeout(() => {
+    burst.classList.add('fade');
+    if (winner) {
+      fp1.classList.add(winner==='p1'?'win':'lose');
+      fp2.classList.add(winner==='p2'?'win':'lose');
+    } else { fp1.classList.add('win'); fp2.classList.add('win'); }
+
+    // Clear consumed debuffs
+    state.debuffs.p1 = {defMod:0, atkMod:0};
+    state.debuffs.p2 = {defMod:0, atkMod:0};
+    c1._defMod = 0; c1._atkMod = 0;
+    c2._defMod = 0; c2._atkMod = 0;
+
+    const chainTag1 = chainBonus1 ? ` <span style="color:#fff488;font-size:.7em">(+2⚡)</span>` : '';
+    const chainTag2 = chainBonus2 ? ` <span style="color:#fff488;font-size:.7em">(+2⚡)</span>` : '';
+    // shockTag goes on the chip of the card whose DEF was reduced (only if not blocked)
+    const shockTagP1 = (shockCaster === 'p2' && !shockBlocked) ? ` <span style="color:#fff488;font-size:.7em">(DEF-3⚡)</span>` : '';
+    const shockTagP2 = (shockCaster === 'p1' && !shockBlocked) ? ` <span style="color:#fff488;font-size:.7em">(DEF-3⚡)</span>` : '';
+    stats.innerHTML = `
+      <div class="stat-chip p1">${c1.name} ATK ${atk1}${chainTag1}${shockTagP1}</div>
+      <div class="stat-chip vs">vs</div>
+      <div class="stat-chip p2">${c2.name} ATK ${atk2}${chainTag2}${shockTagP2}</div>`;
+    stats.classList.add('show');
+
+    if (winner === 'p1') state.scores.p1++; else if (winner === 'p2') state.scores.p2++;
+    c1._used = true; c2._used = true;
+    state.lastType.p1 = c1.type;
+    state.lastType.p2 = c2.type;
+  }, CS(2380));
+
+  // Result banner
+  setTimeout(() => {
+    showResultBanner(winner, c1, c2, atk1, atk2, def1, def2);
+  }, CS(3400));
+
+  // Post-battle abilities (burn, freeze, poison) — after result banner fully gone
+  // lava-shield blocks opponent's post-battle abilities (but not chain/shock which are handled separately)
+  let abilityDelay = CS(6100);
+  const abilities = [];
+  if (c1.ability && c1.ability.id !== 'chain' && c1.ability.id !== 'shock' && c1.ability.id !== 'lava-shield')
+    abilities.push({ability: c1.ability, caster:'p1', target:'p2'});
+  if (c2.ability && c2.ability.id !== 'chain' && c2.ability.id !== 'shock' && c2.ability.id !== 'lava-shield')
+    abilities.push({ability: c2.ability, caster:'p2', target:'p1'});
+
+  // Winner's ability fires first; on tie p1 goes first (p1 is already first in array)
+  abilities.sort((a, b) => {
+    const aWon = !winner || winner === a.caster; // winner or tie counts as "won"
+    const bWon = !winner || winner === b.caster;
+    if (aWon && !bWon) return -1;
+    if (!aWon && bWon) return  1;
+    return 0;
+  });
+
+  let slotOffset = 0;
+  abilities.forEach(({ability, caster, target}) => {
+    const targetCard = target === 'p1' ? c1 : c2;
+    const isBlocked = targetCard.ability?.id === 'lava-shield';
+    const casterLost = winner && winner !== caster;
+    const casterFighter = caster === 'p1' ? fp1 : fp2;
+    const fireAt = abilityDelay + slotOffset;
+    slotOffset += isBlocked ? 4800 : ability.id === 'burn' ? 3800 : 2400;
+
+    setTimeout(() => {
+      // If the caster lost, surge them forward before the ability fires
+      if (casterLost) {
+        const side = caster;
+        const destTransform = side === 'p1'
+          ? 'translateX(-80px) rotate(-3deg) scale(1.06)'
+          : 'translateX(80px) rotate(3deg) scale(1.06)';
+
+        // 1. Snapshot the current computed transform (card is frozen by recoilLose forwards fill)
+        const computed = getComputedStyle(casterFighter).transform;
+        // 2. Kill the animation and pin the element at its current position via inline style
+        casterFighter.classList.remove('lose', 'surge-retreat');
+        casterFighter.style.transform = computed;
+        casterFighter.style.opacity   = '0.4';
+        casterFighter.style.transition = 'none';
+        // 3. Force reflow so inline style registers before we set transition
+        void casterFighter.offsetWidth;
+        // 4. Now set transition and slide to surged position
+        casterFighter.style.transition = 'transform 0.5s cubic-bezier(.23,1.4,.45,1), opacity 0.3s ease, filter 0.3s ease';
+        casterFighter.style.transform  = destTransform;
+        casterFighter.style.opacity    = '1';
+        casterFighter.style.filter     = 'brightness(1.5) saturate(1.3)';
+        // 5. Restore card-front brightness
+        const cf = casterFighter.querySelector('.card-front');
+        if (cf) { cf.style.opacity = '1'; cf.style.filter = ''; }
+      }
+
+      if (isBlocked) {
+        const banners = {
+          burn:   ['🔥 BURN!',   "-1 DEF on opponent's next card"],
+          freeze: ['❄ FREEZE!', 'A random opponent card is frozen!'],
+          poison: ['☠ POISON!', "-2 ATK on opponent's next card"],
+        };
+        const [title, sub] = banners[ability.id] || [ability.name, ''];
+        triggerAbilityEffect(ability.id, title, sub, () => {
+          const blockerName = lavaShielder === 'p1' ? c1.name : c2.name;
+          triggerAbilityEffect('lava-shield', '🛡️ BLOCKED!', `${blockerName}'s Lava Shield absorbs the ${ability.name}!`, () => {
+            if (casterLost) retreatFighter(casterFighter);
+          });
+        });
+      } else {
+        applyAbility(ability, caster, target, 0, () => {
+          if (casterLost) retreatFighter(casterFighter);
+        });
+      }
+    }, fireAt);
+  });
+
+  const totalAbilityTime = slotOffset;
+
+  // Close arena
+  setTimeout(() => {
+    ov.classList.remove('visible');
+    // Clear any inline styles left by the surge transition
+    [fp1, fp2].forEach(f => { f.style.transform = ''; f.style.opacity = ''; f.style.filter = ''; f.style.transition = ''; });
+    document.getElementById('arena-p1').innerHTML = arenaCardHTML(c1, false);
+    document.getElementById('arena-p2').innerHTML = arenaCardHTML(c2, false);
+    renderScore(); renderHands(); showNextBtn(true); state.phase = 'result';
+  }, CS(6600) + totalAbilityTime);
+}
+
+/* ═══════════════════════════════════════════════
+   SHOCK ZAP VISUAL
+════════════════════════════════════════════════ */
+function fireShockZap(caster, targetFighter, targetClass) {
+  const zapSvg  = document.getElementById('shock-zap');
+  const bolt    = document.getElementById('zap-bolt');
+  const glowLine= document.getElementById('zap-glow');
+
+  // Positions in viewBox(100,100) coords:
+  // p1 fighter is around x=38, p2 fighter around x=62, both vertically ~y=50
+  const x1 = caster === 'p1' ? 38 : 62;
+  const x2 = caster === 'p1' ? 62 : 38;
+  const y  = 48;
+
+  // Build a jagged lightning path between the two cards
+  const pts = buildLightningPoints(x1, y, x2, y, 6);
+  const ptStr = pts.map(p => `${p.x},${p.y}`).join(' ');
+  bolt.setAttribute('points', ptStr);
+  glowLine.setAttribute('points', ptStr);
+
+  // Reset dash for re-animation
+  const len = 400;
+  bolt.setAttribute('stroke-dasharray', len);
+  bolt.setAttribute('stroke-dashoffset', len);
+
+  zapSvg.className = 'shock-zap fire';
+
+  // Shock the target fighter card
+  setTimeout(() => {
+    targetFighter.classList.add('shocked');
+
+    // Spawn DEF debuff popup — float it over the target using fixed coords from the fighter's rect
+    const rect = targetFighter.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.className = 'shock-debuff-pop';
+    pop.textContent = 'DEF -3';
+    pop.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top + rect.height*0.35}px;transform:translateX(-50%);`;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1000);
+  }, 150);
+
+  // Clean up — remove shocked, force reflow to clear animation, restore enter position
+  setTimeout(() => {
+    zapSvg.className = 'shock-zap';
+    targetFighter.classList.remove('shocked');
+    void targetFighter.offsetWidth; // flush animation state
+    targetFighter.classList.add('enter'); // snap back to enter position
+  }, 600);
+}
+
+function buildLightningPoints(x1, y1, x2, y2, segments) {
+  const pts = [{x: x1, y: y1}];
+  for (let i = 1; i < segments; i++) {
+    const t = i / segments;
+    const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 4;
+    const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 10;
+    pts.push({x, y});
+  }
+  pts.push({x: x2, y: y2});
+  return pts;
+}
+
+/* ═══════════════════════════════════════════════
+   DRAGON FIRE BREATH — flames engulf the card sides
+════════════════════════════════════════════════ */
+function fireBreathAnimation(fighterEl, side, cb) {
+  const rect = fighterEl.getBoundingClientRect();
+  const cx = rect.left + rect.width  / 2;
+  const cy = rect.top  + rect.height / 2;
+  const W  = rect.width;
+  const H  = rect.height;
+  const fireColors = ['#ff5500','#ff8833','#ffcc00','#ffaa00','#ff3300','#ff6600'];
+
+  // Full-screen fixed SVG overlay
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+  svg.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:280;overflow:visible;`;
+  svg.innerHTML = `<defs>
+    <filter id="ff-glow" x="-40%" y="-20%" width="180%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ff-softglow" x="-60%" y="-40%" width="220%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>`;
+  document.body.appendChild(svg);
+
+  // --- Helpers ---
+  const el = (tag, attrs={}) => {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+  };
+
+  // Flame tongue: wiggly upward lick from (bx,by) with given height and width
+  const makeTongue = (bx, by, h, w, color, phase) => {
+    // Bezier curve: start at base, wiggle left/right, tip at top
+    const wiggle = (phase % 2 === 0 ? 1 : -1) * w * 0.45;
+    const path = el('path', {
+      d: `M ${bx - w*0.5} ${by}
+          C ${bx - w*0.5 + wiggle} ${by - h*0.35}
+            ${bx + w*0.5 + wiggle*0.5} ${by - h*0.65}
+            ${bx} ${by - h}`,
+      stroke: color,
+      'stroke-width': w,
+      'stroke-linecap': 'round',
+      fill: 'none',
+      filter: 'url(#ff-glow)',
+      opacity: '0',
+    });
+    return path;
+  };
+
+  // Glow blob behind flames on each side
+  const makeGlow = (bx, by, rx, ry) => el('ellipse', {
+    cx: bx, cy: by, rx, ry,
+    fill: '#ff4400', opacity: '0',
+    filter: 'url(#ff-softglow)',
+  });
+
+  // Build flames on left and right edges
+  // Each edge gets ~6 tongues staggered vertically, clustered toward sides but not covering face
+  const tongues = [];
+  const glows   = [];
+  const numTongues = 7;
+
+  for (let side2 of ['left', 'right']) {
+    const edgeX  = side2 === 'left' ? rect.left + W*0.08 : rect.right - W*0.08;
+    const glowX  = side2 === 'left' ? rect.left + W*0.18 : rect.right - W*0.18;
+
+    // Glow blob
+    const g = makeGlow(glowX, cy, W*0.28, H*0.42);
+    glows.push(g);
+    svg.appendChild(g);
+
+    for (let i = 0; i < numTongues; i++) {
+      const t     = i / (numTongues - 1);
+      // Cluster near top and bottom, sparse in middle — more dramatic
+      const yFrac = 0.08 + t * 0.84;
+      const by    = rect.top + H * yFrac;
+      // Height varies — taller at middle third
+      const midness = 1 - Math.abs(t - 0.5) * 1.4;
+      const h = (W * 0.28 + midness * W * 0.22) * (0.8 + Math.random()*0.4);
+      const w = W * (0.06 + Math.random()*0.05);
+      // Color: hotter (yellow) in center, redder at top/bottom
+      const hot   = midness > 0.3;
+      const color = hot
+        ? (Math.random() > 0.4 ? '#ff8833' : '#ffcc00')
+        : (Math.random() > 0.5 ? '#ff4400' : '#ff6600');
+
+      // Flames point outward from the card edges
+      const dirFactor = side2 === 'left' ? -1 : 1;
+      const tx = edgeX + dirFactor * (w * 0.5);
+
+      const tongue = makeTongue(tx, by, h * (side2==='left'?1.1:1.0), w, color, i);
+      // Slight tilt outward
+      tongue.setAttribute('transform', `rotate(${dirFactor * (5 + Math.random()*12)}, ${tx}, ${by})`);
+      tongues.push({ el: tongue, baseOp: 0.6 + Math.random()*0.35, delay: i*55 + (side2==='left'?0:28) });
+      svg.appendChild(tongue);
+    }
+  }
+
+  // Orange screen glow behind entire card
+  const screenGlow = makeGlow(cx, cy, W*0.9, H*0.75);
+  screenGlow.setAttribute('opacity','0');
+  svg.insertBefore(screenGlow, svg.firstChild.nextSibling); // behind tongues
+
+  // --- Animate in ---
+  // Glows fade in first
+  requestAnimationFrame(() => {
+    screenGlow.style.transition = 'opacity 0.2s ease';
+    screenGlow.setAttribute('opacity','0.12');
+    glows.forEach(g => {
+      g.style.transition = 'opacity 0.25s ease';
+      g.setAttribute('opacity','0.55');
+    });
+    // Stagger tongues in
+    tongues.forEach(({el:t, baseOp, delay}) => {
+      setTimeout(() => {
+        t.style.transition = 'opacity 0.1s ease-in';
+        t.setAttribute('opacity', String(baseOp));
+      }, delay);
+    });
+  });
+
+  // --- Flicker loop ---
+  const flickerId = setInterval(() => {
+    tongues.forEach(({el:t, baseOp}) => {
+      const newOp = baseOp * (0.45 + Math.random()*0.65);
+      t.style.transition = `opacity ${0.06 + Math.random()*0.1}s ease`;
+      t.setAttribute('opacity', String(Math.min(1, newOp)));
+      // Also randomly nudge the stroke width for thickness flicker
+      const baseW = parseFloat(t.getAttribute('stroke-width'));
+      t.setAttribute('stroke-width', String(baseW * (0.7 + Math.random()*0.6)));
+    });
+    screenGlow.setAttribute('opacity', String(0.08 + Math.random()*0.1));
+  }, 75);
+
+  // --- Fire particles rising from sides ---
+  for (let i = 0; i < 22; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      const sz = 3 + Math.random() * 7;
+      // Pick a side randomly
+      const onLeft = Math.random() > 0.5;
+      const px = onLeft
+        ? rect.left  + W * (Math.random()*0.18)
+        : rect.right - W * (Math.random()*0.18);
+      const py = rect.top + H * (0.1 + Math.random()*0.8);
+      // Float upward and slightly outward
+      const flyX = (onLeft ? -1 : 1) * (10 + Math.random()*30);
+      const flyY = -(40 + Math.random()*80);
+      p.style.cssText = `
+        position:fixed;border-radius:50%;pointer-events:none;z-index:281;
+        left:${px}px;top:${py}px;
+        width:${sz}px;height:${sz}px;
+        background:${fireColors[Math.floor(Math.random()*fireColors.length)]};
+        box-shadow:0 0 6px currentColor;
+        --px:${flyX}px;--py:${flyY}px;
+        animation:abilityParticle ${0.5+Math.random()*0.5}s ease-out forwards;
+      `;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }, i * 45);
+  }
+
+  // --- Fade out at T=900ms ---
+  setTimeout(() => {
+    clearInterval(flickerId);
+    const fade = (e) => { e.style.transition='opacity 0.28s ease-out'; e.setAttribute('opacity','0'); };
+    tongues.forEach(({el:t}) => fade(t));
+    glows.forEach(g => fade(g));
+    fade(screenGlow);
+  }, 900);
+
+  // --- Cleanup and callback at T=1200ms ---
+  setTimeout(() => {
+    svg.remove();
+    if (cb) cb();
+  }, 1200);
+}
+
+/* ═══════════════════════════════════════════════
+   SURGE RETREAT — losing card falls back after ability
+════════════════════════════════════════════════ */
+function retreatFighter(fighter) {
+  // Snapshot current inline transform so retreat animation starts from exactly here
+  const computed = getComputedStyle(fighter).transform;
+  fighter.style.transition = 'none';
+  fighter.style.transform  = computed;
+  fighter.style.opacity    = '';
+  fighter.style.filter     = '';
+  void fighter.offsetWidth;
+  // Clear inline styles and hand back to the keyframe retreat animation
+  fighter.style.transform  = '';
+  fighter.style.transition = '';
+  fighter.classList.add('surge-retreat');
+  setTimeout(() => {
+    const cf = fighter.querySelector('.card-front');
+    if (cf) { cf.style.opacity = ''; cf.style.filter = ''; }
+  }, 400);
+}
+
+/* ═══════════════════════════════════════════════
+   APPLY ABILITY EFFECTS
+════════════════════════════════════════════════ */
+function applyAbility(ability, caster, target, chainBonus, cb) {
+  if (ability.id === 'burn') {
+    state.debuffs[target].defMod = -1;
+    // Fire breath plays first on the actual card, then banner shows when it finishes
+    const fighterEl = document.getElementById(`arena-fighter-${caster}`);
+    fireBreathAnimation(fighterEl, caster, () => {
+      triggerAbilityEffect('burn', '🔥 BURN!', "-1 DEF on opponent's next card", cb);
+    });
+
+  } else if (ability.id === 'freeze') {
+    const hand = state.hands[target];
+    const eligible = hand.filter(c => !c._used && !c._frozen);
+    if (eligible.length) {
+      const pick = eligible[Math.floor(Math.random() * eligible.length)];
+      pick._frozen = true;
+      pick._frozenRound = state.round;
+    }
+    triggerAbilityEffect('freeze', '❄ FREEZE!', 'A random opponent card is frozen!', () => { renderHands(); if(cb) cb(); });
+
+  } else if (ability.id === 'chain') {
+    // handled before arena
+  } else if (ability.id === 'shock') {
+    // handled inline during arena
+
+  } else if (ability.id === 'poison') {
+    state.debuffs[target].atkMod = -2;
+    triggerAbilityEffect('poison', '☠ POISON!', "-2 ATK on opponent's next card", cb);
+  }
+}
+
+function showResultBanner(winner,c1,c2,atk1,atk2,def1,def2){
+  atk1=atk1||c1.atk; atk2=atk2||c2.atk; def1=def1||c1.def; def2=def2||c2.def;
+  const el=document.getElementById('battle-result');
+  const txt=document.getElementById('battle-result-text');
+  const p2n=state.vsAI?'AI':'P2';
+  el.classList.remove('show');txt.className='battle-result-text';
+  let msg,cls;
+  if(winner==='p1'){msg=`🔥 P1 WINS!<br><small style="font-family:'Rajdhani',sans-serif;font-size:.4em;letter-spacing:3px;font-weight:600">${c1.name} ATK ${atk1} vs ${c2.name} DEF ${def2}</small>`;cls='win-p1'}
+  else if(winner==='p2'){msg=`💥 ${p2n} WINS!<br><small style="font-family:'Rajdhani',sans-serif;font-size:.4em;letter-spacing:3px;font-weight:600">${c2.name} ATK ${atk2} vs ${c1.name} DEF ${def1}</small>`;cls='win-p2'}
+  else{msg=`⚡ TIE!<br><small style="font-family:'Rajdhani',sans-serif;font-size:.4em;letter-spacing:3px;font-weight:600">Both attacks cancelled out</small>`;cls='tie'}
+  txt.innerHTML=msg;txt.classList.add(cls);
+  void el.offsetWidth;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2700);
+}
+
+/* ═══════════════════════════════════════════════
+   NEXT ROUND / WIN CHECK
+════════════════════════════════════════════════ */
+function nextRound(){
+  if(state.scores.p1>=3){showWinner('p1');return}
+  if(state.scores.p2>=3){showWinner('p2');return}
+  const p1l=state.hands.p1.filter(c=>!c._used).length;
+  const p2l=state.hands.p2.filter(c=>!c._used).length;
+  if(p1l===0||p2l===0){
+    if(state.scores.p1>state.scores.p2){showWinner('p1');return}
+    if(state.scores.p2>state.scores.p1){showWinner('p2');return}
+    dealHands();
+    // reset debuffs and last type on new deal
+    state.debuffs={p1:{defMod:0,atkMod:0},p2:{defMod:0,atkMod:0}};
+    state.lastType={p1:null,p2:null};
+  }
+  state.round++;state.picked={p1:null,p2:null};
+  // Unfreeze any card that was frozen last round
+  [...state.hands.p1, ...state.hands.p2].forEach(c => {
+    if(c._frozen && c._frozenRound < state.round - 1){
+      c._frozen = false; c._frozenRound = null;
+    }
+  });
+  enterPhase('p1-pick');
+}
+
+/* ═══════════════════════════════════════════════
+   WINNER
+════════════════════════════════════════════════ */
+function showWinner(player){
+  const title=document.getElementById('winner-title');
+  const p2l=state.vsAI?'AI':'Player 2';
+  title.textContent=player==='p1'?'Player 1 Wins!':`${p2l} Wins!`;
+  title.className=`winner-title ${player}`;
+  document.getElementById('winner-score-p1').textContent=state.scores.p1;
+  document.getElementById('winner-score-p2').textContent=state.scores.p2;
+  showScreen('winner-screen');
+  burstConfetti(player);
+}
+function restartGame(){
+  document.getElementById('confetti').innerHTML='';
+  showScreen('start-screen');buildPreviewCards();
+}
+
+/* ═══════════════════════════════════════════════
+   SPARKS
+════════════════════════════════════════════════ */
+function triggerSparks(){
+  const ov=document.getElementById('sparks');
+  const cols=['#ff4400','#00ccff','#ffe600','#cc44ff','#ff88aa','#88ffdd','#ffffff'];
+  ov.innerHTML='';
+  for(let i=0;i<44;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    const x=28+Math.random()*44, y=22+Math.random()*55;
+    const tx=(Math.random()-.5)*320, ty=(Math.random()-.5)*320;
+    const sz=3+Math.random()*12;
+    s.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};--tx:${tx}px;--ty:${ty}px;animation-delay:${Math.random()*.2}s;animation-duration:${.45+Math.random()*.5}s;box-shadow:0 0 10px currentColor;`;
+    ov.appendChild(s);
+  }
+  setTimeout(()=>ov.innerHTML='',1200);
+}
+
+/* ═══════════════════════════════════════════════
+   CONFETTI
+════════════════════════════════════════════════ */
+function burstConfetti(player){
+  const c=document.getElementById('confetti');c.innerHTML='';
+  const cols=player==='p1'
+    ?['#4488ff','#88bbff','#ffffff','#2255cc','#aaccff','#ffdd88']
+    :['#ff4477','#ff88aa','#ffffff','#cc2255','#ffaacc','#ffdd88'];
+  for(let i=0;i<140;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    const x=Math.random()*100,dur=2.4+Math.random()*2.8,delay=Math.random()*2.2;
+    const sz=4+Math.random()*11,rot=Math.random()*360;
+    p.style.cssText=`left:${x}%;width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${dur}s;animation-delay:${delay}s;transform:rotate(${rot}deg);${Math.random()>.45?'border-radius:50%':'border-radius:1px'}`;
+    c.appendChild(p);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN SWITCHER
+════════════════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════
+   PREVIEW CARDS
+════════════════════════════════════════════════ */
+function buildPreviewCards(){
+  const el=document.getElementById('preview-cards');
+  el.innerHTML=CARD_DEFS.map(c=>cardHTML(c,'','')).join('');
+}
+buildPreviewCards();
+</script>
+</body>
+</html>
